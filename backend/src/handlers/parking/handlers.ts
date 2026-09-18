@@ -1,0 +1,92 @@
+import { Request, Response, NextFunction } from 'express';
+import { parkingService } from '../../services/parkingService';
+import { searchService } from '../../services/searchService';
+import { sendSuccess, sendCreated, sendPaginated } from '../../utils/response';
+
+/**
+ * POST /parking
+ * Create a new parking listing.
+ */
+export async function createListingHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const hostId = req.user!.userId;
+    const listing = await parkingService.createListing(hostId, req.body);
+    sendCreated(res, listing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /parking/:id
+ * Retrieve a single listing by ID.
+ */
+export async function getListingHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const listing = await parkingService.getListingById(req.params.id);
+    sendSuccess(res, listing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * PUT /parking/:id
+ * Update an existing listing.
+ */
+export async function updateListingHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+    const listing = await parkingService.updateListing(req.params.id, userId, userRole, req.body);
+    sendSuccess(res, listing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * DELETE /parking/:id
+ * Soft-delete a listing.
+ */
+export async function deleteListingHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+    await parkingService.deleteListing(req.params.id, userId, userRole);
+    sendSuccess(res, { message: 'Listing deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * PATCH /parking/:id/status
+ * Update listing status (ACTIVE / INACTIVE / SUSPENDED).
+ */
+export async function updateStatusHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
+    const listing = await parkingService.updateStatus(req.params.id, userId, userRole, req.body.status);
+    sendSuccess(res, listing);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /parking
+ * Search & filter parking listings (location, price, dates, amenities, rating, distance).
+ */
+export async function searchListingsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await searchService.search(req.query as any);
+    sendPaginated(res, result.items, {
+      limit: result.pagination.limit,
+      nextToken: result.pagination.nextToken || undefined,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
