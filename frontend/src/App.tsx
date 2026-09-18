@@ -36,6 +36,7 @@ import { AdminDisputesPage } from './pages/admin/AdminDisputesPage';
 
 // Shared Pages
 import { ProfilePage } from './pages/shared/ProfilePage';
+import { ProfileSettingsPage } from './pages/user/ProfileSettingsPage';
 
 export const App: React.FC = () => {
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
@@ -79,6 +80,7 @@ export const App: React.FC = () => {
 
                 {/* Shared Pages */}
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/settings" element={<ProfileSettingsPage />} />
 
                 {/* Catch-all redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
