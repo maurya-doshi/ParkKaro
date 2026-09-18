@@ -83,12 +83,13 @@ export const ParkingDetailsPage: React.FC = () => {
     );
   }
 
-  const startHour = parseInt(startTime.split(':')[0]);
-  const endHour = parseInt(endTime.split(':')[0]);
-  const durationHours = Math.max(1, endHour - startHour);
-  const baseAmount = listing.pricePerHour * durationHours;
-  const platformFee = Math.round(baseAmount * 0.1);
-  const totalAmount = baseAmount + platformFee;
+  const startHour = parseInt(startTime.split(':')[0], 10);
+  const endHour = parseInt(endTime.split(':')[0], 10);
+  const fallbackDuration = Math.max(1, endHour - startHour);
+  const durationHours = availability?.priceEstimate?.durationHours ?? fallbackDuration;
+  const baseAmount = availability?.priceEstimate?.baseAmount ?? (listing.pricePerHour * durationHours);
+  const platformFee = availability?.priceEstimate?.platformFee ?? Math.round(baseAmount * 0.1);
+  const totalAmount = availability?.priceEstimate?.totalAmount ?? (baseAmount + platformFee);
 
   const handleProceedToCheckout = () => {
     const params = new URLSearchParams({
