@@ -1,0 +1,34 @@
+{
+  "name": "parkshare-infrastructure",
+  "version": "1.0.0",
+  "description": "ParkShare AWS Infrastructure — SAM/CloudFormation, scripts, and deployment tools",
+  "private": true,
+  "scripts": {
+    "build": "cd ../backend && npm run build",
+    "deploy": "sam build --template-file template.yaml && sam deploy",
+    "deploy:staging": "sam build --template-file template.yaml && sam deploy --config-env staging",
+    "deploy:prod": "sam build --template-file template.yaml && sam deploy --config-env production",
+    "create-tables-local": "npx ts-node scripts/create-tables-local.ts",
+    "cognito:seed": "npx ts-node scripts/cognito-setup.ts seed-demo",
+    "cognito:list": "npx ts-node scripts/cognito-setup.ts list-users",
+    "cognito:create-admin": "npx ts-node scripts/cognito-setup.ts create-admin",
+    "s3:upload-url": "npx ts-node scripts/s3-presign.ts upload",
+    "s3:download-url": "npx ts-node scripts/s3-presign.ts download",
+    "validate": "sam validate --template-file template.yaml",
+    "stack:outputs": "aws cloudformation describe-stacks --stack-name parkshare-production --query 'Stacks[0].Outputs'",
+    "stack:delete": "sam delete --stack-name parkshare-production --no-prompts",
+    "logs": "sam logs --stack-name parkshare-production --tail"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.540.0",
+    "@aws-sdk/client-dynamodb": "^3.540.0",
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@aws-sdk/s3-request-presigner": "^3.540.0",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3"
+  }
+}

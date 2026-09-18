@@ -1,0 +1,1182 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ParkShare — AWS-powered parking marketplace.
+  Complete serverless infrastructure: API Gateway, Lambda, DynamoDB, Cognito, S3, Bedrock IAM, CloudWatch.
+
+# ═══════════════════════════════════════════════════════════════
+# PARAMETERS
+# ═══════════════════════════════════════════════════════════════
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [staging, production]
+    Description: Deployment environment
+
+  DynamoDBTablePrefix:
+    Type: String
+    Default: parkshare
+    Description: Prefix for all DynamoDB table names
+
+  PlatformCommissionPercent:
+    Type: String
+    Default: '10'
+    Description: Platform commission percentage
+
+  TaxPercent:
+    Type: String
+    Default: '0'
+    Description: Tax percentage
+
+  FrontendDomain:
+    Type: String
+    Default: '*'
+    Description: Frontend domain for CORS (e.g., https://parkshare.example.com)
+
+# ═══════════════════════════════════════════════════════════════
+# CONDITIONS
+# ═══════════════════════════════════════════════════════════════
+Conditions:
+  IsProduction: !Equals [!Ref Environment, production]
+
+# ═══════════════════════════════════════════════════════════════
+# GLOBALS
+# ═══════════════════════════════════════════════════════════════
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs18.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_ENV: !Ref Environment
+        AWS_REGION_NAME: !Ref AWS::Region
+        DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        S3_BUCKET_NAME: !Ref ParkShareImagesBucket
+        AUTH_MODE: cognito
+        PLATFORM_COMMISSION_PERCENT: !Ref PlatformCommissionPercent
+        TAX_PERCENT: !Ref TaxPercent
+    Tags:
+      Project: ParkShare
+      Environment: !Ref Environment
+
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization,X-Demo-User-Id,X-Demo-Email,X-Demo-Name,X-Demo-Role'"
+      AllowOrigin: "'*'"
+
+# ═══════════════════════════════════════════════════════════════
+# RESOURCES
+# ═══════════════════════════════════════════════════════════════
+Resources:
+
+  # ─────────────────────────────────────────────────────────────
+  # COGNITO — Authentication
+  # ─────────────────────────────────────────────────────────────
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub parkshare-users-${Environment}
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          TemporaryPasswordValidityDays: 7
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: role
+          AttributeDataType: String
+          Required: false
+          Mutable: true
+          StringAttributeConstraints:
+            MinLength: '1'
+            MaxLength: '20'
+        - Name: phone_number_verified
+          AttributeDataType: Boolean
+          Required: false
+          Mutable: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      UserPoolTags:
+        Project: ParkShare
+        Environment: !Ref Environment
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub parkshare-web-${Environment}
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlowsUserPoolClient: false
+      ReadAttributes:
+        - email
+        - name
+        - custom:role
+      WriteAttributes:
+        - email
+        - name
+        - custom:role
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  # Cognito Admin Group
+  CognitoAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: ADMIN
+      UserPoolId: !Ref CognitoUserPool
+      Description: Platform administrators
+      Precedence: 0
+
+  CognitoHostGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: HOST
+      UserPoolId: !Ref CognitoUserPool
+      Description: Parking space hosts
+      Precedence: 1
+
+  CognitoDriverGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: DRIVER
+      UserPoolId: !Ref CognitoUserPool
+      Description: Parking space drivers/renters
+      Precedence: 2
+
+  # ─────────────────────────────────────────────────────────────
+  # S3 — Image Storage
+  # ─────────────────────────────────────────────────────────────
+  ParkShareImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub parkshare-images-${Environment}-${AWS::AccountId}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT]
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+            ExposedHeaders:
+              - ETag
+              - x-amz-request-id
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupIncompleteUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: Project
+          Value: ParkShare
+        - Key: Environment
+          Value: !Ref Environment
+
+  ParkShareImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ParkShareImagesBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${ParkShareImagesBucket.Arn}/listings/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/*
+
+  # ─────────────────────────────────────────────────────────────
+  # DynamoDB — All Tables
+  # ─────────────────────────────────────────────────────────────
+
+  # 1. Users Table
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: role
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: role-index
+          KeySchema:
+            - AttributeName: role
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 2. ParkingListings Table
+  ParkingTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-parking
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: listingId
+          AttributeType: S
+        - AttributeName: hostId
+          AttributeType: S
+        - AttributeName: area
+          AttributeType: S
+        - AttributeName: city
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: pricePerHour
+          AttributeType: N
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: listingId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: hostId-index
+          KeySchema:
+            - AttributeName: hostId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: area-price-index
+          KeySchema:
+            - AttributeName: area
+              KeyType: HASH
+            - AttributeName: pricePerHour
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: city-index
+          KeySchema:
+            - AttributeName: city
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 3. Bookings Table
+  BookingsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-bookings
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: bookingId
+          AttributeType: S
+        - AttributeName: driverId
+          AttributeType: S
+        - AttributeName: hostId
+          AttributeType: S
+        - AttributeName: listingId
+          AttributeType: S
+        - AttributeName: bookingStatus
+          AttributeType: S
+        - AttributeName: startTime
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: bookingId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: driverId-index
+          KeySchema:
+            - AttributeName: driverId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: hostId-index
+          KeySchema:
+            - AttributeName: hostId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: listingId-index
+          KeySchema:
+            - AttributeName: listingId
+              KeyType: HASH
+            - AttributeName: startTime
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: bookingStatus
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 4. SlotLocks Table (Double-booking prevention)
+  SlotLocksTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-slot-locks
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: listingId
+          AttributeType: S
+        - AttributeName: slotKey
+          AttributeType: S
+      KeySchema:
+        - AttributeName: listingId
+          KeyType: HASH
+        - AttributeName: slotKey
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 5. Vehicles Table
+  VehiclesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-vehicles
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: vehicleId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: vehicleId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: userId-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 6. Reviews Table
+  ReviewsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-reviews
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: reviewId
+          AttributeType: S
+        - AttributeName: listingId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: bookingId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: reviewId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: listingId-index
+          KeySchema:
+            - AttributeName: listingId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: userId-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: bookingId-index
+          KeySchema:
+            - AttributeName: bookingId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 7. Favorites Table
+  FavoritesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-favorites
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: listingId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: listingId
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 8. Payments Table
+  PaymentsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-payments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: paymentId
+          AttributeType: S
+        - AttributeName: bookingId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: paymentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: bookingId-index
+          KeySchema:
+            - AttributeName: bookingId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: userId-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 9. Payouts Table
+  PayoutsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-payouts
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: payoutId
+          AttributeType: S
+        - AttributeName: hostId
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: payoutId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: hostId-index
+          KeySchema:
+            - AttributeName: hostId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 10. Notifications Table
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-notifications
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: notificationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: notificationId
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 11. Conversations Table
+  ConversationsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-conversations
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: conversationId
+          AttributeType: S
+        - AttributeName: participant1
+          AttributeType: S
+        - AttributeName: participant2
+          AttributeType: S
+        - AttributeName: lastMessageAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: conversationId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: participant1-index
+          KeySchema:
+            - AttributeName: participant1
+              KeyType: HASH
+            - AttributeName: lastMessageAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: participant2-index
+          KeySchema:
+            - AttributeName: participant2
+              KeyType: HASH
+            - AttributeName: lastMessageAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 12. Messages Table
+  MessagesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-messages
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: conversationId
+          AttributeType: S
+        - AttributeName: messageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: conversationId
+          KeyType: HASH
+        - AttributeName: messageId
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 13. Disputes Table
+  DisputesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-disputes
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: disputeId
+          AttributeType: S
+        - AttributeName: bookingId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: reportedBy
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: disputeId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: bookingId-index
+          KeySchema:
+            - AttributeName: bookingId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: reportedBy-index
+          KeySchema:
+            - AttributeName: reportedBy
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # 14. Reports Table
+  ReportsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub ${DynamoDBTablePrefix}-reports
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: reportId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: reportedBy
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: reportId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: reportedBy-index
+          KeySchema:
+            - AttributeName: reportedBy
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # ─────────────────────────────────────────────────────────────
+  # API GATEWAY + LAMBDA — Backend API
+  # ─────────────────────────────────────────────────────────────
+  ParkShareApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub parkshare-api-${Environment}
+      StageName: !Ref Environment
+      TracingEnabled: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: >-
+          {"requestId":"$context.requestId","ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime","httpMethod":"$context.httpMethod",
+          "path":"$context.path","status":"$context.status",
+          "responseLength":"$context.responseLength","integrationLatency":"$context.integrationLatency"}
+      MethodSettings:
+        - HttpMethod: '*'
+          ResourcePath: '/*'
+          MetricsEnabled: true
+          DataTraceEnabled: false
+          LoggingLevel: INFO
+          ThrottlingBurstLimit: 100
+          ThrottlingRateLimit: 50
+      Tags:
+        Project: ParkShare
+        Environment: !Ref Environment
+
+  # Single Lambda function handling all routes (Express.js backend)
+  ParkShareBackendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub parkshare-backend-${Environment}
+      Description: ParkShare Express.js backend API handler
+      CodeUri: ../backend/
+      Handler: dist/lambda.handler
+      Runtime: nodejs18.x
+      MemorySize: 1024
+      Timeout: 30
+      Tracing: Active
+      Events:
+        # Catch-all proxy route
+        ProxyRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ParkShareApi
+            Path: /
+            Method: ANY
+        ProxyAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ParkShareApi
+            Path: /{proxy+}
+            Method: ANY
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          AWS_REGION_NAME: !Ref AWS::Region
+          DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+          COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+          S3_BUCKET_NAME: !Ref ParkShareImagesBucket
+          AUTH_MODE: cognito
+          PLATFORM_COMMISSION_PERCENT: !Ref PlatformCommissionPercent
+          TAX_PERCENT: !Ref TaxPercent
+      Policies:
+        # DynamoDB Full Access to parkshare-* tables
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchWriteItem
+                - dynamodb:BatchGetItem
+                - dynamodb:TransactWriteItems
+                - dynamodb:TransactGetItems
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTablePrefix}-*
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTablePrefix}-*/index/*
+        # S3 — presigned URL generation + read
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:DeleteObject
+              Resource: !Sub ${ParkShareImagesBucket.Arn}/*
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+              Resource: !GetAtt ParkShareImagesBucket.Arn
+        # Cognito — user management
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminDisableUser
+                - cognito-idp:AdminEnableUser
+                - cognito-idp:AdminAddUserToGroup
+                - cognito-idp:AdminRemoveUserFromGroup
+                - cognito-idp:ListUsers
+              Resource: !GetAtt CognitoUserPool.Arn
+        # Bedrock — AI inference (Person 4 integration)
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/*
+        # CloudWatch Logs
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+      Tags:
+        Project: ParkShare
+        Environment: !Ref Environment
+
+  # ─────────────────────────────────────────────────────────────
+  # CLOUDWATCH — Monitoring & Logging
+  # ─────────────────────────────────────────────────────────────
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/apigateway/parkshare-api-${Environment}
+      RetentionInDays: 30
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/parkshare-backend-${Environment}
+      RetentionInDays: 30
+      Tags:
+        - Key: Project
+          Value: ParkShare
+
+  # Lambda Error Alarm
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub parkshare-lambda-errors-${Environment}
+      AlarmDescription: Alarm when Lambda function errors exceed threshold
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ParkShareBackendFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  # API Gateway 5XX Alarm
+  Api5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub parkshare-api-5xx-${Environment}
+      AlarmDescription: Alarm when API 5XX errors exceed threshold
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub parkshare-api-${Environment}
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  # Lambda Duration Alarm (performance)
+  LambdaDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub parkshare-lambda-duration-${Environment}
+      AlarmDescription: Alarm when Lambda p99 latency exceeds threshold
+      Namespace: AWS/Lambda
+      MetricName: Duration
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ParkShareBackendFunction
+      ExtendedStatistic: p99
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: 10000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  # ─────────────────────────────────────────────────────────────
+  # CLOUDWATCH DASHBOARD
+  # ─────────────────────────────────────────────────────────────
+  ParkShareDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub ParkShare-${Environment}
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Invocations & Errors",
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300}],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#d62728"}],
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Duration (ms)",
+                "metrics": [
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Average", "period": 300}],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "p99", "period": 300, "color": "#d62728"}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "API Gateway Requests",
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300}],
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}],
+                  ["AWS/ApiGateway", "5XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#d62728"}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "API Gateway Latency (ms)",
+                "metrics": [
+                  ["AWS/ApiGateway", "Latency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300}],
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300, "color": "#2ca02c"}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 12, "width": 24, "height": 6,
+              "properties": {
+                "title": "DynamoDB Read/Write Capacity",
+                "metrics": [
+                  ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${DynamoDBTablePrefix}-bookings", {"stat": "Sum", "period": 300}],
+                  ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${DynamoDBTablePrefix}-bookings", {"stat": "Sum", "period": 300, "color": "#d62728"}],
+                  ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${DynamoDBTablePrefix}-parking", {"stat": "Sum", "period": 300, "color": "#2ca02c"}],
+                  ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${DynamoDBTablePrefix}-parking", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 18, "width": 12, "height": 6,
+              "properties": {
+                "title": "Cognito Sign-Ins",
+                "metrics": [
+                  ["AWS/Cognito", "SignInSuccesses", "UserPool", "${CognitoUserPool}", "UserPoolClient", "${CognitoUserPoolClient}", {"stat": "Sum", "period": 3600}],
+                  ["AWS/Cognito", "TokenRefreshSuccesses", "UserPool", "${CognitoUserPool}", "UserPoolClient", "${CognitoUserPoolClient}", {"stat": "Sum", "period": 3600}]
+                ],
+                "region": "${AWS::Region}",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "log",
+              "x": 12, "y": 18, "width": 12, "height": 6,
+              "properties": {
+                "title": "Recent Lambda Errors",
+                "query": "SOURCE '/aws/lambda/parkshare-backend-${Environment}' | filter @message like /ERROR/ | sort @timestamp desc | limit 20",
+                "region": "${AWS::Region}",
+                "view": "table"
+              }
+            }
+          ]
+        }
+
+  # ─────────────────────────────────────────────────────────────
+  # S3 — Frontend Hosting Bucket
+  # ─────────────────────────────────────────────────────────────
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub parkshare-frontend-${Environment}-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Project
+          Value: ParkShare
+        - Key: Environment
+          Value: !Ref Environment
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+
+# ═══════════════════════════════════════════════════════════════
+# OUTPUTS
+# ═══════════════════════════════════════════════════════════════
+Outputs:
+  # API
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ParkShareApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name: !Sub parkshare-api-endpoint-${Environment}
+
+  ApiId:
+    Description: API Gateway ID
+    Value: !Ref ParkShareApi
+
+  # Lambda
+  BackendFunctionArn:
+    Description: Backend Lambda function ARN
+    Value: !GetAtt ParkShareBackendFunction.Arn
+
+  BackendFunctionName:
+    Description: Backend Lambda function name
+    Value: !Ref ParkShareBackendFunction
+
+  # Cognito
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: !Sub parkshare-cognito-pool-id-${Environment}
+
+  CognitoUserPoolArn:
+    Description: Cognito User Pool ARN
+    Value: !GetAtt CognitoUserPool.Arn
+
+  CognitoClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref CognitoUserPoolClient
+    Export:
+      Name: !Sub parkshare-cognito-client-id-${Environment}
+
+  # S3
+  ImagesBucketName:
+    Description: S3 bucket for parking listing images
+    Value: !Ref ParkShareImagesBucket
+    Export:
+      Name: !Sub parkshare-images-bucket-${Environment}
+
+  ImagesBucketArn:
+    Description: S3 images bucket ARN
+    Value: !GetAtt ParkShareImagesBucket.Arn
+
+  FrontendBucketName:
+    Description: S3 bucket for frontend hosting
+    Value: !Ref FrontendBucket
+
+  FrontendBucketWebsiteURL:
+    Description: Frontend S3 website URL
+    Value: !GetAtt FrontendBucket.WebsiteURL
+    Export:
+      Name: !Sub parkshare-frontend-url-${Environment}
+
+  # DynamoDB
+  DynamoDBTablePrefix:
+    Description: DynamoDB table name prefix
+    Value: !Ref DynamoDBTablePrefix
+
+  # Region
+  AWSRegion:
+    Description: AWS Region
+    Value: !Ref AWS::Region

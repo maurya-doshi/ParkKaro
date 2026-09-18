@@ -1,0 +1,40 @@
+# AWS SAM CLI Configuration
+# DO NOT commit real AWS credentials or account-specific values
+
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "parkshare"
+region = "ap-south-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+s3_prefix = "parkshare"
+resolve_s3 = true
+fail_on_empty_changeset = false
+
+[default.build.parameters]
+use_container = false
+parallel = true
+
+[default.local_start_api.parameters]
+port = 3001
+
+[staging.deploy.parameters]
+stack_name = "parkshare-staging"
+region = "ap-south-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+s3_prefix = "parkshare-staging"
+resolve_s3 = true
+fail_on_empty_changeset = false
+parameter_overrides = "Environment=staging"
+
+[production.deploy.parameters]
+stack_name = "parkshare-prod"
+region = "ap-south-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+s3_prefix = "parkshare-prod"
+resolve_s3 = true
+fail_on_empty_changeset = false
+parameter_overrides = "Environment=production"

@@ -28,3 +28,16 @@ backend/coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# AWS SAM
+.aws-sam/
+infrastructure/.aws-sam/
+infrastructure/node_modules/
+infrastructure/package-lock.json
+samconfig.toml.bak
+
+# AWS Credentials — NEVER commit
+*.pem
+*.key
+credentials
+aws-credentials.json
