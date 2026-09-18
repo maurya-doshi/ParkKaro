@@ -586,12 +586,16 @@ Mark a booking as completed.
 
 ## Vehicles
 
+> **Implemented:** Commit 8
+
 ### POST /vehicles
+
+Create a vehicle for the authenticated driver. The first vehicle is automatically set as default.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
 **Request Body:**
 
@@ -601,46 +605,108 @@ Mark a booking as completed.
   "vehicleType": "CAR",
   "make": "Hyundai",
   "model": "Creta",
-  "color": "White"
+  "color": "White",
+  "isDefault": false
 }
 ```
 
-**Response (201):** Created vehicle object.
+**Valid `vehicleType` values:** `CAR`, `BIKE`, `SUV`, `TRUCK`, `EV`
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "vehicleId": "vehicle_abc123456",
+    "userId": "user_driver1",
+    "vehicleNumber": "KA-01-AB-1234",
+    "vehicleType": "CAR",
+    "make": "Hyundai",
+    "model": "Creta",
+    "color": "White",
+    "isDefault": true,
+    "createdAt": "2026-09-19T00:00:00.000Z",
+    "updatedAt": "2026-09-19T00:00:00.000Z"
+  }
+}
+```
 
 ---
 
 ### GET /vehicles
 
-List authenticated user's vehicles.
+List all vehicles belonging to the authenticated user.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
-**Response (200):** Array of vehicle objects.
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "vehicleId": "vehicle_abc123456",
+        "userId": "user_driver1",
+        "vehicleNumber": "KA-01-AB-1234",
+        "vehicleType": "CAR",
+        "make": "Hyundai",
+        "model": "Creta",
+        "color": "White",
+        "isDefault": true,
+        "createdAt": "2026-09-19T00:00:00.000Z",
+        "updatedAt": "2026-09-19T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
 
 ---
 
 ### GET /vehicles/{id}
 
+Get a vehicle by ID. Only the owner or ADMIN can access.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER (own) |
+| **Role** | DRIVER (own), ADMIN |
 
 **Response (200):** Vehicle object.
+
+**Error (403):** When requesting another user's vehicle.
+
+**Error (404):** When vehicle does not exist.
 
 ---
 
 ### PUT /vehicles/{id}
 
+Update a vehicle. Only the owner or ADMIN can update. Setting `isDefault: true` clears other defaults.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER (own) |
+| **Role** | DRIVER (own), ADMIN |
 
-**Request Body:** Same as POST (partial update).
+**Request Body:** All fields optional.
+
+```json
+{
+  "vehicleNumber": "KA-01-CD-5678",
+  "vehicleType": "SUV",
+  "make": "Toyota",
+  "model": "Fortuner",
+  "color": "Black",
+  "isDefault": true
+}
+```
 
 **Response (200):** Updated vehicle object.
 
@@ -648,10 +714,12 @@ List authenticated user's vehicles.
 
 ### DELETE /vehicles/{id}
 
+Delete a vehicle. Only the owner or ADMIN can delete.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER (own) |
+| **Role** | DRIVER (own), ADMIN |
 
 **Response (200):**
 
@@ -663,14 +731,16 @@ List authenticated user's vehicles.
 
 ## Favorites
 
+> **Implemented:** Commit 8
+
 ### POST /favorites/{parkingId}
 
-Add listing to favorites.
+Add a parking listing to the user's favorites. Returns 404 if the listing does not exist. Returns 409 if already favorited.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
 **Response (201):**
 
@@ -681,16 +751,20 @@ Add listing to favorites.
 }
 ```
 
+**Error (404):** Listing not found.
+
+**Error (409):** Already in favorites.
+
 ---
 
 ### DELETE /favorites/{parkingId}
 
-Remove from favorites.
+Remove a listing from favorites. Returns 404 if it was not favorited.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
 **Response (200):**
 
@@ -705,12 +779,12 @@ Remove from favorites.
 
 ### GET /favorites
 
-List user's favorites with listing details.
+List user's favorites enriched with listing details.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
 **Response (200):**
 
@@ -723,8 +797,10 @@ List user's favorites with listing details.
         "listingId": "listing_abc123",
         "title": "Covered Parking Near Forum Mall",
         "area": "Koramangala",
+        "city": "Bengaluru",
         "pricePerHour": 40,
         "rating": 4.5,
+        "photos": [],
         "addedAt": "2026-09-18T10:00:00.000Z"
       }
     ]
@@ -734,11 +810,36 @@ List user's favorites with listing details.
 
 ---
 
+### GET /favorites/{parkingId}/check
+
+Check whether a specific listing is in the user's favorites.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | DRIVER, ADMIN |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "listingId": "listing_abc123",
+    "isFavorite": true
+  }
+}
+```
+
+---
+
 ## Reviews
+
+> **Implemented:** Commit 8
 
 ### POST /reviews
 
-Create a review. Requires completed booking for the listing.
+Create a review for a parking listing. The reviewer must be the driver of a **completed** booking for that listing. One review allowed per booking.
 
 | Field | Value |
 |-------|-------|
@@ -755,6 +856,13 @@ Create a review. Requires completed booking for the listing.
   "comment": "Good parking spot, well maintained."
 }
 ```
+
+**Validation rules:**
+- `rating`: Integer between 1 and 5 (inclusive)
+- `comment`: 1–1000 characters
+- `bookingId` must reference a `COMPLETED` booking made by the caller
+- `listingId` must match the booking's `listingId`
+- One review per booking (duplicate blocked with 409)
 
 **Response (201):**
 
@@ -773,6 +881,12 @@ Create a review. Requires completed booking for the listing.
 }
 ```
 
+**Error (400):** Booking not completed, listing mismatch, or invalid rating/comment.
+
+**Error (403):** Caller is not the driver who made the booking.
+
+**Error (404):** Booking does not exist.
+
 **Error (409 — Duplicate):**
 
 ```json
@@ -787,16 +901,77 @@ Create a review. Requires completed booking for the listing.
 
 ---
 
-### GET /parking/{id}/reviews
+### GET /reviews/listing/{listingId}
 
-Get reviews for a listing.
+Get paginated reviews for a listing, sorted by newest first.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Optional |
 | **Role** | Any |
 
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| limit | number | Max results (default: 50) |
+
 **Response (200):** Paginated list of reviews.
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "reviewId": "review_ghi789",
+        "listingId": "listing_abc123",
+        "bookingId": "booking_def456",
+        "userId": "user_driver1",
+        "rating": 4,
+        "comment": "Good parking spot, well maintained.",
+        "createdAt": "2026-09-18T15:00:00.000Z"
+      }
+    ],
+    "pagination": { "count": 1, "limit": 50, "nextToken": null }
+  }
+}
+```
+
+---
+
+### GET /reviews/me
+
+Get the authenticated user's own reviews.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | DRIVER |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": { "items": [ ... ] }
+}
+```
+
+---
+
+### GET /reviews/{id}
+
+Get a specific review by ID.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Optional |
+| **Role** | Any |
+
+**Response (200):** Review object.
+
+**Error (404):** Review not found.
 
 ---
 
