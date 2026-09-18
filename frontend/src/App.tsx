@@ -6,6 +6,9 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { LandingPage } from './pages/public/LandingPage';
 import { SearchResultsPage } from './pages/public/SearchResultsPage';
+import { ParkingDetailsPage } from './pages/public/ParkingDetailsPage';
+import { BookingCheckoutPage } from './pages/driver/BookingCheckoutPage';
+import { BookingConfirmationPage } from './pages/driver/BookingConfirmationPage';
 
 export const App: React.FC = () => {
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
@@ -22,9 +25,9 @@ export const App: React.FC = () => {
                 {/* Public Pages */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/search" element={<SearchResultsPage />} />
-                <Route path="/parking/:id" element={<div className="p-8 text-center text-slate-500">Parking Details Loading...</div>} />
-                <Route path="/checkout/:id" element={<div className="p-8 text-center text-slate-500">Checkout Loading...</div>} />
-                <Route path="/confirmation/:bookingId" element={<div className="p-8 text-center text-slate-500">Confirmation Loading...</div>} />
+                <Route path="/parking/:id" element={<ParkingDetailsPage />} />
+                <Route path="/checkout/:id" element={<BookingCheckoutPage />} />
+                <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
                 <Route path="/become-host" element={<div className="p-8 text-center text-slate-500">Become a Host Loading...</div>} />
 
                 {/* Driver Pages */}

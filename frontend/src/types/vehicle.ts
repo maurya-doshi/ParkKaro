@@ -1,4 +1,5 @@
 import { VehicleType } from './parking';
+export type { VehicleType };
 
 export interface Vehicle {
   vehicleId: string;
