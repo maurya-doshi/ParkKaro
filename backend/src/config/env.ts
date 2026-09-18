@@ -30,6 +30,9 @@ export const env = {
 
   // Auth
   authMode: (process.env.AUTH_MODE || 'demo') as 'cognito' | 'demo',
+
+  // Payment
+  paymentProvider: (process.env.PAYMENT_PROVIDER || 'MOCK') as 'MOCK' | 'RAZORPAY' | 'STRIPE',
 };
 
 /**
