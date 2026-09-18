@@ -1,122 +1,63 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { Navbar } from './components/common/Navbar';
+import { Footer } from './components/common/Footer';
+import { LandingPage } from './pages/public/LandingPage';
+import { SearchResultsPage } from './pages/public/SearchResultsPage';
 
-function App() {
-  const [count, setCount] = useState(0)
+export const App: React.FC = () => {
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar onOpenAI={() => setAiAssistantOpen(true)} />
 
-      <div className="ticks"></div>
+            <main className="flex-grow">
+              <Routes>
+                {/* Public Pages */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/search" element={<SearchResultsPage />} />
+                <Route path="/parking/:id" element={<div className="p-8 text-center text-slate-500">Parking Details Loading...</div>} />
+                <Route path="/checkout/:id" element={<div className="p-8 text-center text-slate-500">Checkout Loading...</div>} />
+                <Route path="/confirmation/:bookingId" element={<div className="p-8 text-center text-slate-500">Confirmation Loading...</div>} />
+                <Route path="/become-host" element={<div className="p-8 text-center text-slate-500">Become a Host Loading...</div>} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                {/* Driver Pages */}
+                <Route path="/driver/dashboard" element={<div className="p-8 text-center text-slate-500">Driver Dashboard Loading...</div>} />
+                <Route path="/driver/bookings" element={<div className="p-8 text-center text-slate-500">My Bookings Loading...</div>} />
+                <Route path="/driver/vehicles" element={<div className="p-8 text-center text-slate-500">Vehicles Loading...</div>} />
+                <Route path="/driver/favorites" element={<div className="p-8 text-center text-slate-500">Favorites Loading...</div>} />
+                <Route path="/driver/messages" element={<div className="p-8 text-center text-slate-500">Messages Loading...</div>} />
+                <Route path="/driver/notifications" element={<div className="p-8 text-center text-slate-500">Notifications Loading...</div>} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+                {/* Host Pages */}
+                <Route path="/host/dashboard" element={<div className="p-8 text-center text-slate-500">Host Dashboard Loading...</div>} />
+                <Route path="/host/listings" element={<div className="p-8 text-center text-slate-500">Host Listings Loading...</div>} />
+                <Route path="/host/create" element={<div className="p-8 text-center text-slate-500">Create Listing Loading...</div>} />
+                <Route path="/host/earnings" element={<div className="p-8 text-center text-slate-500">Earnings Loading...</div>} />
 
-export default App
+                {/* Admin Pages */}
+                <Route path="/admin/dashboard" element={<div className="p-8 text-center text-slate-500">Admin Dashboard Loading...</div>} />
+                <Route path="/admin/users" element={<div className="p-8 text-center text-slate-500">Admin Users Loading...</div>} />
+                <Route path="/admin/listings" element={<div className="p-8 text-center text-slate-500">Admin Listings Loading...</div>} />
+                <Route path="/admin/disputes" element={<div className="p-8 text-center text-slate-500">Admin Disputes Loading...</div>} />
+
+                {/* Catch-all redirect */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+
+            <Footer />
+          </div>
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
+
+export default App;
