@@ -9,6 +9,12 @@ import { SearchResultsPage } from './pages/public/SearchResultsPage';
 import { ParkingDetailsPage } from './pages/public/ParkingDetailsPage';
 import { BookingCheckoutPage } from './pages/driver/BookingCheckoutPage';
 import { BookingConfirmationPage } from './pages/driver/BookingConfirmationPage';
+import { DriverDashboardPage } from './pages/driver/DriverDashboardPage';
+import { MyBookingsPage } from './pages/driver/MyBookingsPage';
+import { VehiclesPage } from './pages/driver/VehiclesPage';
+import { FavoritesPage } from './pages/driver/FavoritesPage';
+import { MessagesPage } from './pages/driver/MessagesPage';
+import { NotificationsPage } from './pages/driver/NotificationsPage';
 
 export const App: React.FC = () => {
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
@@ -31,12 +37,12 @@ export const App: React.FC = () => {
                 <Route path="/become-host" element={<div className="p-8 text-center text-slate-500">Become a Host Loading...</div>} />
 
                 {/* Driver Pages */}
-                <Route path="/driver/dashboard" element={<div className="p-8 text-center text-slate-500">Driver Dashboard Loading...</div>} />
-                <Route path="/driver/bookings" element={<div className="p-8 text-center text-slate-500">My Bookings Loading...</div>} />
-                <Route path="/driver/vehicles" element={<div className="p-8 text-center text-slate-500">Vehicles Loading...</div>} />
-                <Route path="/driver/favorites" element={<div className="p-8 text-center text-slate-500">Favorites Loading...</div>} />
-                <Route path="/driver/messages" element={<div className="p-8 text-center text-slate-500">Messages Loading...</div>} />
-                <Route path="/driver/notifications" element={<div className="p-8 text-center text-slate-500">Notifications Loading...</div>} />
+                <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
+                <Route path="/driver/bookings" element={<MyBookingsPage />} />
+                <Route path="/driver/vehicles" element={<VehiclesPage />} />
+                <Route path="/driver/favorites" element={<FavoritesPage />} />
+                <Route path="/driver/messages" element={<MessagesPage />} />
+                <Route path="/driver/notifications" element={<NotificationsPage />} />
 
                 {/* Host Pages */}
                 <Route path="/host/dashboard" element={<div className="p-8 text-center text-slate-500">Host Dashboard Loading...</div>} />
