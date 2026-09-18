@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { parkingService } from '../../services/parkingService';
+import { searchService } from '../../services/searchService';
 import { sendSuccess, sendCreated, sendPaginated } from '../../utils/response';
 
 /**
@@ -76,20 +77,15 @@ export async function updateStatusHandler(req: Request, res: Response, next: Nex
 
 /**
  * GET /parking
- * Basic listing endpoint for active listings or host's listings (full search engine added in Commit 4).
+ * Search & filter parking listings (location, price, dates, amenities, rating, distance).
  */
-export async function listListingsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function searchListingsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const hostId = req.query.hostId as string;
-    if (hostId) {
-      const items = await parkingService.getHostListings(hostId);
-      sendPaginated(res, items, { limit: items.length });
-      return;
-    }
-
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 20;
-    const result = await parkingService.listActiveListings(limit);
-    sendPaginated(res, result.items, { limit });
+    const result = await searchService.search(req.query as any);
+    sendPaginated(res, result.items, {
+      limit: result.pagination.limit,
+      nextToken: result.pagination.nextToken || undefined,
+    });
   } catch (err) {
     next(err);
   }

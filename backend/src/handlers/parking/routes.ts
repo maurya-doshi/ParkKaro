@@ -7,13 +7,14 @@ import {
   updateParkingListingSchema,
   updateStatusSchema,
 } from '../../validators/parkingValidator';
+import { searchParkingSchema } from '../../validators/searchValidator';
 import {
   createListingHandler,
   getListingHandler,
   updateListingHandler,
   deleteListingHandler,
   updateStatusHandler,
-  listListingsHandler,
+  searchListingsHandler,
 } from './handlers';
 
 export const parkingRouter = Router();
@@ -27,8 +28,13 @@ parkingRouter.post(
   createListingHandler
 );
 
-// List listings
-parkingRouter.get('/', optionalAuth, listListingsHandler);
+// List / search listings (Public/Optional auth with query validation)
+parkingRouter.get(
+  '/',
+  optionalAuth,
+  validate(searchParkingSchema, 'query'),
+  searchListingsHandler
+);
 
 // Get single listing
 parkingRouter.get('/:id', optionalAuth, getListingHandler);
