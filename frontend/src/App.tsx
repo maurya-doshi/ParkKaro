@@ -4,9 +4,14 @@ import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
+import { AIAssistantPanel } from './components/common/AIAssistantPanel';
+
+// Public Pages
 import { LandingPage } from './pages/public/LandingPage';
 import { SearchResultsPage } from './pages/public/SearchResultsPage';
 import { ParkingDetailsPage } from './pages/public/ParkingDetailsPage';
+
+// Driver Pages
 import { BookingCheckoutPage } from './pages/driver/BookingCheckoutPage';
 import { BookingConfirmationPage } from './pages/driver/BookingConfirmationPage';
 import { DriverDashboardPage } from './pages/driver/DriverDashboardPage';
@@ -15,6 +20,22 @@ import { VehiclesPage } from './pages/driver/VehiclesPage';
 import { FavoritesPage } from './pages/driver/FavoritesPage';
 import { MessagesPage } from './pages/driver/MessagesPage';
 import { NotificationsPage } from './pages/driver/NotificationsPage';
+
+// Host Pages
+import { BecomeHostPage } from './pages/host/BecomeHostPage';
+import { HostDashboardPage } from './pages/host/HostDashboardPage';
+import { HostListingsPage } from './pages/host/HostListingsPage';
+import { CreateListingPage } from './pages/host/CreateListingPage';
+import { HostEarningsPage } from './pages/host/HostEarningsPage';
+
+// Admin Pages
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminUsersPage } from './pages/admin/AdminUsersPage';
+import { AdminListingsPage } from './pages/admin/AdminListingsPage';
+import { AdminDisputesPage } from './pages/admin/AdminDisputesPage';
+
+// Shared Pages
+import { ProfilePage } from './pages/shared/ProfilePage';
 
 export const App: React.FC = () => {
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
@@ -34,7 +55,7 @@ export const App: React.FC = () => {
                 <Route path="/parking/:id" element={<ParkingDetailsPage />} />
                 <Route path="/checkout/:id" element={<BookingCheckoutPage />} />
                 <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
-                <Route path="/become-host" element={<div className="p-8 text-center text-slate-500">Become a Host Loading...</div>} />
+                <Route path="/become-host" element={<BecomeHostPage />} />
 
                 {/* Driver Pages */}
                 <Route path="/driver/dashboard" element={<DriverDashboardPage />} />
@@ -45,16 +66,19 @@ export const App: React.FC = () => {
                 <Route path="/driver/notifications" element={<NotificationsPage />} />
 
                 {/* Host Pages */}
-                <Route path="/host/dashboard" element={<div className="p-8 text-center text-slate-500">Host Dashboard Loading...</div>} />
-                <Route path="/host/listings" element={<div className="p-8 text-center text-slate-500">Host Listings Loading...</div>} />
-                <Route path="/host/create" element={<div className="p-8 text-center text-slate-500">Create Listing Loading...</div>} />
-                <Route path="/host/earnings" element={<div className="p-8 text-center text-slate-500">Earnings Loading...</div>} />
+                <Route path="/host/dashboard" element={<HostDashboardPage />} />
+                <Route path="/host/listings" element={<HostListingsPage />} />
+                <Route path="/host/create" element={<CreateListingPage />} />
+                <Route path="/host/earnings" element={<HostEarningsPage />} />
 
                 {/* Admin Pages */}
-                <Route path="/admin/dashboard" element={<div className="p-8 text-center text-slate-500">Admin Dashboard Loading...</div>} />
-                <Route path="/admin/users" element={<div className="p-8 text-center text-slate-500">Admin Users Loading...</div>} />
-                <Route path="/admin/listings" element={<div className="p-8 text-center text-slate-500">Admin Listings Loading...</div>} />
-                <Route path="/admin/disputes" element={<div className="p-8 text-center text-slate-500">Admin Disputes Loading...</div>} />
+                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route path="/admin/listings" element={<AdminListingsPage />} />
+                <Route path="/admin/disputes" element={<AdminDisputesPage />} />
+
+                {/* Shared Pages */}
+                <Route path="/profile" element={<ProfilePage />} />
 
                 {/* Catch-all redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -63,6 +87,12 @@ export const App: React.FC = () => {
 
             <Footer />
           </div>
+
+          {/* AI Assistant Panel — Portal overlay */}
+          <AIAssistantPanel
+            open={aiAssistantOpen}
+            onClose={() => setAiAssistantOpen(false)}
+          />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
