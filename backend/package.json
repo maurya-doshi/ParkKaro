@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1135.0",
     "@aws-sdk/client-dynamodb": "^3.540.0",
     "@aws-sdk/lib-dynamodb": "^3.540.0",
     "cors": "^2.8.5",
@@ -35,8 +36,16 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/tests"],
-    "moduleFileExtensions": ["ts", "js", "json"],
-    "testMatch": ["**/*.test.ts"]
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testMatch": [
+      "**/*.test.ts"
+    ]
   }
 }
