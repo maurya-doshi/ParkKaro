@@ -55,7 +55,7 @@ export const App: React.FC = () => {
                 <Route path="/search" element={<SearchResultsPage />} />
                 <Route path="/parking/:id" element={<ParkingDetailsPage />} />
                 <Route path="/checkout/:id" element={<BookingCheckoutPage />} />
-                <Route path="/confirmation/:bookingId" element={<BookingConfirmationPage />} />
+                <Route path="/booking/:id" element={<BookingConfirmationPage />} />
                 <Route path="/become-host" element={<BecomeHostPage />} />
 
                 {/* Driver Pages */}
