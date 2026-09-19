@@ -3,6 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   ParkShare — AWS-powered parking marketplace.
   Complete serverless infrastructure: API Gateway, Lambda, DynamoDB, Cognito, S3, Bedrock IAM, CloudWatch.
+  DynamoDB tables use DeletionPolicy:Retain and UpdateReplacePolicy:Retain to protect existing data.
 
 # ═══════════════════════════════════════════════════════════════
 # PARAMETERS
@@ -17,7 +18,17 @@ Parameters:
   DynamoDBTablePrefix:
     Type: String
     Default: parkshare
-    Description: Prefix for all DynamoDB table names
+    Description: Prefix for all DynamoDB table names (must match backend DYNAMODB_TABLE_PREFIX)
+
+  CreateDynamoDBTables:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: >
+      Set to 'false' if DynamoDB tables already exist in AWS and should NOT be
+      managed by this stack. When false, only IAM permissions are granted to
+      existing tables via wildcard ARN. This prevents CloudFormation from
+      attempting to create/replace/delete existing tables and their data.
 
   PlatformCommissionPercent:
     Type: String
@@ -39,6 +50,7 @@ Parameters:
 # ═══════════════════════════════════════════════════════════════
 Conditions:
   IsProduction: !Equals [!Ref Environment, production]
+  ShouldCreateTables: !Equals [!Ref CreateDynamoDBTables, 'true']
 
 # ═══════════════════════════════════════════════════════════════
 # GLOBALS
@@ -53,14 +65,7 @@ Globals:
     Environment:
       Variables:
         NODE_ENV: !Ref Environment
-        AWS_REGION_NAME: !Ref AWS::Region
         DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
-        COGNITO_USER_POOL_ID: !Ref CognitoUserPool
-        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
-        S3_BUCKET_NAME: !Ref ParkShareImagesBucket
-        AUTH_MODE: cognito
-        PLATFORM_COMMISSION_PERCENT: !Ref PlatformCommissionPercent
-        TAX_PERCENT: !Ref TaxPercent
     Tags:
       Project: ParkShare
       Environment: !Ref Environment
@@ -113,10 +118,6 @@ Resources:
           StringAttributeConstraints:
             MinLength: '1'
             MaxLength: '20'
-        - Name: phone_number_verified
-          AttributeDataType: Boolean
-          Required: false
-          Mutable: true
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
@@ -155,7 +156,7 @@ Resources:
         IdToken: hours
         RefreshToken: days
 
-  # Cognito Admin Group
+  # Cognito Role Groups
   CognitoAdminGroup:
     Type: AWS::Cognito::UserPoolGroup
     Properties:
@@ -181,11 +182,12 @@ Resources:
       Precedence: 2
 
   # ─────────────────────────────────────────────────────────────
-  # S3 — Image Storage
+  # S3 — Image Storage (private, presigned URL access)
   # ─────────────────────────────────────────────────────────────
   ParkShareImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub parkshare-images-${Environment}-${AWS::AccountId}
       CorsConfiguration:
@@ -216,31 +218,21 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  ParkShareImagesBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref ParkShareImagesBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowCloudFrontRead
-            Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub ${ParkShareImagesBucket.Arn}/listings/*
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/*
-
   # ─────────────────────────────────────────────────────────────
-  # DynamoDB — All Tables
+  # DynamoDB — All Tables (CONDITIONAL)
+  #
+  # SAFETY: All tables have DeletionPolicy:Retain and
+  # UpdateReplacePolicy:Retain. If CreateDynamoDBTables=false,
+  # tables are NOT created by this stack (for use when tables
+  # already exist from manual/backend creation).
   # ─────────────────────────────────────────────────────────────
 
   # 1. Users Table
   UsersTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-users
       BillingMode: PAY_PER_REQUEST
@@ -280,7 +272,9 @@ Resources:
   # 2. ParkingListings Table
   ParkingTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-parking
       BillingMode: PAY_PER_REQUEST
@@ -344,7 +338,9 @@ Resources:
   # 3. Bookings Table
   BookingsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-bookings
       BillingMode: PAY_PER_REQUEST
@@ -408,7 +404,9 @@ Resources:
   # 4. SlotLocks Table (Double-booking prevention)
   SlotLocksTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-slot-locks
       BillingMode: PAY_PER_REQUEST
@@ -429,7 +427,9 @@ Resources:
   # 5. Vehicles Table
   VehiclesTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-vehicles
       BillingMode: PAY_PER_REQUEST
@@ -459,7 +459,9 @@ Resources:
   # 6. Reviews Table
   ReviewsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-reviews
       BillingMode: PAY_PER_REQUEST
@@ -507,7 +509,9 @@ Resources:
   # 7. Favorites Table
   FavoritesTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-favorites
       BillingMode: PAY_PER_REQUEST
@@ -528,7 +532,9 @@ Resources:
   # 8. Payments Table
   PaymentsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-payments
       BillingMode: PAY_PER_REQUEST
@@ -566,7 +572,9 @@ Resources:
   # 9. Payouts Table
   PayoutsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-payouts
       BillingMode: PAY_PER_REQUEST
@@ -596,7 +604,9 @@ Resources:
   # 10. Notifications Table
   NotificationsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-notifications
       BillingMode: PAY_PER_REQUEST
@@ -617,7 +627,9 @@ Resources:
   # 11. Conversations Table
   ConversationsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-conversations
       BillingMode: PAY_PER_REQUEST
@@ -657,7 +669,9 @@ Resources:
   # 12. Messages Table
   MessagesTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-messages
       BillingMode: PAY_PER_REQUEST
@@ -678,7 +692,9 @@ Resources:
   # 13. Disputes Table
   DisputesTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-disputes
       BillingMode: PAY_PER_REQUEST
@@ -726,7 +742,9 @@ Resources:
   # 14. Reports Table
   ReportsTable:
     Type: AWS::DynamoDB::Table
+    Condition: ShouldCreateTables
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub ${DynamoDBTablePrefix}-reports
       BillingMode: PAY_PER_REQUEST
@@ -804,7 +822,6 @@ Resources:
       Timeout: 30
       Tracing: Active
       Events:
-        # Catch-all proxy route
         ProxyRoot:
           Type: Api
           Properties:
@@ -829,7 +846,7 @@ Resources:
           PLATFORM_COMMISSION_PERCENT: !Ref PlatformCommissionPercent
           TAX_PERCENT: !Ref TaxPercent
       Policies:
-        # DynamoDB Full Access to parkshare-* tables
+        # DynamoDB — wildcard ARN to work with both managed and pre-existing tables
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -847,7 +864,7 @@ Resources:
               Resource:
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTablePrefix}-*
                 - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTablePrefix}-*/index/*
-        # S3 — presigned URL generation + read
+        # S3 — presigned URL generation + read/write
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -860,7 +877,7 @@ Resources:
               Action:
                 - s3:ListBucket
               Resource: !GetAtt ParkShareImagesBucket.Arn
-        # Cognito — user management
+        # Cognito — user management from backend
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -874,7 +891,7 @@ Resources:
                 - cognito-idp:AdminRemoveUserFromGroup
                 - cognito-idp:ListUsers
               Resource: !GetAtt CognitoUserPool.Arn
-        # Bedrock — AI inference (Person 4 integration)
+        # Bedrock — AI inference (Person 4)
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
@@ -952,7 +969,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  # Lambda Duration Alarm (performance)
+  # Lambda Duration Alarm (p99 latency)
   LambdaDurationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -970,9 +987,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
 
-  # ─────────────────────────────────────────────────────────────
-  # CLOUDWATCH DASHBOARD
-  # ─────────────────────────────────────────────────────────────
+  # CloudWatch Dashboard
   ParkShareDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
@@ -981,8 +996,7 @@ Resources:
         {
           "widgets": [
             {
-              "type": "metric",
-              "x": 0, "y": 0, "width": 12, "height": 6,
+              "type": "metric", "x": 0, "y": 0, "width": 12, "height": 6,
               "properties": {
                 "title": "Lambda Invocations & Errors",
                 "metrics": [
@@ -990,26 +1004,22 @@ Resources:
                   ["AWS/Lambda", "Errors", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#d62728"}],
                   ["AWS/Lambda", "Throttles", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
                 ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
+                "region": "${AWS::Region}", "view": "timeSeries"
               }
             },
             {
-              "type": "metric",
-              "x": 12, "y": 0, "width": 12, "height": 6,
+              "type": "metric", "x": 12, "y": 0, "width": 12, "height": 6,
               "properties": {
                 "title": "Lambda Duration (ms)",
                 "metrics": [
                   ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Average", "period": 300}],
                   ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "p99", "period": 300, "color": "#d62728"}]
                 ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
+                "region": "${AWS::Region}", "view": "timeSeries"
               }
             },
             {
-              "type": "metric",
-              "x": 0, "y": 6, "width": 12, "height": 6,
+              "type": "metric", "x": 0, "y": 6, "width": 12, "height": 6,
               "properties": {
                 "title": "API Gateway Requests",
                 "metrics": [
@@ -1017,59 +1027,31 @@ Resources:
                   ["AWS/ApiGateway", "4XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}],
                   ["AWS/ApiGateway", "5XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#d62728"}]
                 ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
+                "region": "${AWS::Region}", "view": "timeSeries"
               }
             },
             {
-              "type": "metric",
-              "x": 12, "y": 6, "width": 12, "height": 6,
+              "type": "metric", "x": 12, "y": 6, "width": 12, "height": 6,
               "properties": {
                 "title": "API Gateway Latency (ms)",
                 "metrics": [
                   ["AWS/ApiGateway", "Latency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300}],
                   ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300, "color": "#2ca02c"}]
                 ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
+                "region": "${AWS::Region}", "view": "timeSeries"
               }
             },
             {
-              "type": "metric",
-              "x": 0, "y": 12, "width": 24, "height": 6,
+              "type": "metric", "x": 0, "y": 12, "width": 24, "height": 6,
               "properties": {
-                "title": "DynamoDB Read/Write Capacity",
+                "title": "DynamoDB Read/Write",
                 "metrics": [
                   ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${DynamoDBTablePrefix}-bookings", {"stat": "Sum", "period": 300}],
                   ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${DynamoDBTablePrefix}-bookings", {"stat": "Sum", "period": 300, "color": "#d62728"}],
                   ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${DynamoDBTablePrefix}-parking", {"stat": "Sum", "period": 300, "color": "#2ca02c"}],
                   ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${DynamoDBTablePrefix}-parking", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
                 ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
-              }
-            },
-            {
-              "type": "metric",
-              "x": 0, "y": 18, "width": 12, "height": 6,
-              "properties": {
-                "title": "Cognito Sign-Ins",
-                "metrics": [
-                  ["AWS/Cognito", "SignInSuccesses", "UserPool", "${CognitoUserPool}", "UserPoolClient", "${CognitoUserPoolClient}", {"stat": "Sum", "period": 3600}],
-                  ["AWS/Cognito", "TokenRefreshSuccesses", "UserPool", "${CognitoUserPool}", "UserPoolClient", "${CognitoUserPoolClient}", {"stat": "Sum", "period": 3600}]
-                ],
-                "region": "${AWS::Region}",
-                "view": "timeSeries"
-              }
-            },
-            {
-              "type": "log",
-              "x": 12, "y": 18, "width": 12, "height": 6,
-              "properties": {
-                "title": "Recent Lambda Errors",
-                "query": "SOURCE '/aws/lambda/parkshare-backend-${Environment}' | filter @message like /ERROR/ | sort @timestamp desc | limit 20",
-                "region": "${AWS::Region}",
-                "view": "table"
+                "region": "${AWS::Region}", "view": "timeSeries"
               }
             }
           ]
@@ -1080,6 +1062,8 @@ Resources:
   # ─────────────────────────────────────────────────────────────
   FrontendBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub parkshare-frontend-${Environment}-${AWS::AccountId}
       WebsiteConfiguration:
@@ -1157,10 +1141,6 @@ Outputs:
     Export:
       Name: !Sub parkshare-images-bucket-${Environment}
 
-  ImagesBucketArn:
-    Description: S3 images bucket ARN
-    Value: !GetAtt ParkShareImagesBucket.Arn
-
   FrontendBucketName:
     Description: S3 bucket for frontend hosting
     Value: !Ref FrontendBucket
@@ -1176,7 +1156,11 @@ Outputs:
     Description: DynamoDB table name prefix
     Value: !Ref DynamoDBTablePrefix
 
-  # Region
+  # Deployment info
+  CreateDynamoDBTables:
+    Description: Whether this stack manages DynamoDB tables
+    Value: !Ref CreateDynamoDBTables
+
   AWSRegion:
     Description: AWS Region
     Value: !Ref AWS::Region
