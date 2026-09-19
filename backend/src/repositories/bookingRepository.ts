@@ -123,6 +123,10 @@ export class BookingRepository extends BaseRepository<Booking> {
       }
     );
   }
+
+  async listAll(limit = 100): Promise<Booking[]> {
+    return this.scanItems({ Limit: limit });
+  }
 }
 
 export const bookingRepository = new BookingRepository();

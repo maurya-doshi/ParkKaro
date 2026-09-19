@@ -66,6 +66,10 @@ export class PaymentRepository extends BaseRepository<Payment> {
       expressionAttributeValues
     );
   }
+
+  async listAll(limit = 100): Promise<Payment[]> {
+    return this.scanItems({ Limit: limit });
+  }
 }
 
 export const paymentRepository = new PaymentRepository();

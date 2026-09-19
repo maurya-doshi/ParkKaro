@@ -1603,10 +1603,12 @@ Update the review status of a report.
 
 ### GET /host/dashboard
 
+Authenticated host dashboard aggregating listings, bookings, earnings, rating, and recent activity. Strictly scoped to the authenticated host.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | HOST |
+| **Role** | HOST, ADMIN |
 
 **Response (200):**
 
@@ -1616,22 +1618,103 @@ Update the review status of a report.
   "data": {
     "totalListings": 3,
     "activeListings": 2,
+    "totalBookings": 45,
     "upcomingBookings": 5,
     "activeBookings": 1,
-    "completedBookings": 42,
+    "completedBookings": 36,
+    "cancelledBookings": 3,
     "totalEarnings": 45000,
-    "monthlyEarnings": 8500,
-    "occupancyRate": 0.72,
-    "averageRating": 4.3,
+    "pendingEarnings": 8500,
+    "averageRating": 4.8,
     "recentBookings": [
       {
         "bookingId": "booking_def456",
-        "listingTitle": "Covered Parking Near Forum Mall",
-        "driverName": "John",
+        "listingId": "listing_abc123",
+        "hostId": "host_1",
+        "driverId": "driver_1",
+        "vehicleId": "vehicle_1",
         "startTime": "2026-09-20T10:00:00.000Z",
         "endTime": "2026-09-20T12:00:00.000Z",
-        "amount": 88,
-        "status": "CONFIRMED"
+        "totalAmount": 88,
+        "hostEarnings": 72,
+        "bookingStatus": "CONFIRMED"
+      }
+    ],
+    "recentNotifications": [ ... ]
+  }
+}
+```
+
+**Errors:**
+- `401 UNAUTHORIZED` — Missing or invalid authentication.
+- `403 FORBIDDEN` — User is not a host or administrator.
+
+---
+
+### GET /host/listings-summary
+
+Listing-level performance summary for all properties owned by the authenticated host.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | HOST, ADMIN |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "listingId": "listing_abc123",
+        "title": "Covered Parking Near Forum Mall",
+        "status": "ACTIVE",
+        "capacity": 2,
+        "pricePerHour": 40,
+        "bookingCount": 24,
+        "earnings": 19200,
+        "rating": 4.8,
+        "reviewCount": 18
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET /host/earnings
+
+Detailed host earnings analytics with period filtering, gross/net calculations, and periodic breakdown.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | HOST, ADMIN |
+| **Query Params** | `period`: `7d`, `30d`, `90d`, `12m`, `today`, `week`, `month`, `all` (default: `30d`) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "period": "30d",
+    "grossRevenue": 15000,
+    "platformFees": 1500,
+    "netEarnings": 13500,
+    "totalBookings": 45,
+    "completedBookings": 42,
+    "averageBookingValue": 300,
+    "breakdown": [
+      {
+        "date": "2026-09-18",
+        "bookings": 3,
+        "gross": 480,
+        "fees": 48,
+        "net": 432
       }
     ]
   }
@@ -1644,10 +1727,12 @@ Update the review status of a report.
 
 ### GET /driver/dashboard
 
+Authenticated driver dashboard aggregating upcoming reservations, active session, saved items, and unread notification count.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER |
+| **Role** | DRIVER, ADMIN |
 
 **Response (200):**
 
@@ -1655,66 +1740,47 @@ Update the review status of a report.
 {
   "success": true,
   "data": {
-    "upcomingBookings": [ ... ],
-    "pastBookings": [ ... ],
+    "upcomingBookings": [
+      {
+        "bookingId": "booking_123",
+        "listingId": "listing_abc123",
+        "startTime": "2026-09-25T10:00:00.000Z",
+        "endTime": "2026-09-25T12:00:00.000Z",
+        "totalAmount": 110,
+        "bookingStatus": "CONFIRMED"
+      }
+    ],
     "activeBooking": null,
+    "completedBookings": 12,
+    "cancelledBookings": 1,
+    "totalBookings": 14,
     "favoriteCount": 5,
     "vehicleCount": 2,
-    "reviewCount": 8,
-    "unreadNotifications": 3
+    "unreadNotifications": 3,
+    "recentBookings": [ ... ],
+    "recentNotifications": [ ... ]
   }
 }
 ```
+
+**Errors:**
+- `401 UNAUTHORIZED` — Missing or invalid authentication.
+- `403 FORBIDDEN` — User is not a driver or administrator.
 
 ---
 
 ## Admin APIs
 
-All admin APIs require `ADMIN` role. Role is verified server-side from authenticated identity.
+All admin endpoints require `ADMIN` role. Role is strictly verified server-side from the authenticated identity.
 
-### GET /admin/users
+### GET /admin/dashboard & GET /admin/analytics
 
-List all users with optional filters.
+Platform-wide analytics and real-time operational statistics.
 
-**Query:** `role`, `status`, `limit`, `nextToken`
-
----
-
-### GET /admin/listings
-
-List all listings with optional filters.
-
-**Query:** `status`, `area`, `limit`, `nextToken`
-
----
-
-### GET /admin/bookings
-
-List all bookings.
-
-**Query:** `status`, `limit`, `nextToken`
-
----
-
-### GET /admin/reports
-
-List all reports.
-
-**Query:** `status`, `limit`, `nextToken`
-
----
-
-### GET /admin/disputes
-
-List all disputes.
-
-**Query:** `status`, `limit`, `nextToken`
-
----
-
-### GET /admin/analytics
-
-Platform-wide analytics.
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
 
 **Response (200):**
 
@@ -1728,14 +1794,187 @@ Platform-wide analytics.
     "totalListings": 50,
     "activeListings": 42,
     "totalBookings": 350,
+    "completedBookings": 310,
+    "cancelledBookings": 25,
+    "activeBookings": 5,
+    "upcomingBookings": 10,
     "totalRevenue": 125000,
     "platformEarnings": 12500,
-    "averageRating": 4.2,
+    "totalHostPayouts": 98000,
+    "pendingDisputes": 2,
+    "openReports": 1,
+    "averageRating": 4.5,
     "bookingsToday": 8,
     "revenueToday": 2400
   }
 }
 ```
+
+---
+
+### GET /admin/activity
+
+Recent platform activity feed across bookings, users, listings, disputes, reports, and payments.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `limit` (number, default: 10) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "recentBookings": [ ... ],
+    "recentUsers": [ ... ],
+    "recentListings": [ ... ],
+    "recentDisputes": [ ... ],
+    "recentReports": [ ... ],
+    "recentPayments": [ ... ]
+  }
+}
+```
+
+---
+
+### GET /admin/users
+
+List platform users with optional role and status filters.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `role` (`DRIVER`, `HOST`, `ADMIN`), `status` (`ACTIVE`, `SUSPENDED`, `DELETED`), `limit` |
+
+**Response (200):** `{ "success": true, "data": { "items": [ ... ] } }`
+
+---
+
+### GET /admin/users/{id}
+
+Retrieve full profile details for a user.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+
+**Response (200):** User object.
+
+---
+
+### PATCH /admin/users/{id}/status
+
+Update user status (e.g. suspend or reactivate an account).
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+
+**Request Body:**
+
+```json
+{
+  "status": "SUSPENDED"
+}
+```
+
+**Response (200):** Updated User object.
+
+---
+
+### GET /admin/listings
+
+List platform listings with optional status and area filters.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `status` (`ACTIVE`, `INACTIVE`, `SUSPENDED`, `DELETED`), `area`, `limit` |
+
+**Response (200):** `{ "success": true, "data": { "items": [ ... ] } }`
+
+---
+
+### GET /admin/listings/{id}
+
+Get full listing details for administrative inspection.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+
+**Response (200):** ParkingListing object.
+
+---
+
+### PATCH /admin/listings/{id}/status
+
+Update listing moderation status (e.g. suspend a flagged listing).
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+
+**Request Body:**
+
+```json
+{
+  "status": "SUSPENDED"
+}
+```
+
+**Response (200):** Updated ParkingListing object.
+
+---
+
+### GET /admin/bookings
+
+List platform bookings with operational filters.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `status` (`PENDING`, `CONFIRMED`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `DISPUTED`), `driverId`, `hostId`, `listingId`, `limit` |
+
+**Response (200):** `{ "success": true, "data": { "items": [ ... ] } }`
+
+---
+
+### GET /admin/disputes
+
+List all platform disputes for administrative review.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `status` (`OPEN`, `UNDER_REVIEW`, `RESOLVED`, `DISMISSED`), `limit` |
+
+**Response (200):** `{ "success": true, "data": { "items": [ ... ] } }`
+
+---
+
+### GET /admin/reports
+
+List all platform reports for content moderation.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `status` (`PENDING`, `REVIEWED`, `ACTIONED`, `DISMISSED`), `limit` |
+
+**Response (200):** `{ "success": true, "data": { "items": [ ... ] } }`
 
 ---
 

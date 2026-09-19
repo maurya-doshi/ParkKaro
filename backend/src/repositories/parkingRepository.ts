@@ -142,6 +142,10 @@ export class ParkingRepository extends BaseRepository<ParkingListing> {
       }
     );
   }
+
+  async listAll(limit = 100): Promise<ParkingListing[]> {
+    return this.scanItems({ Limit: limit });
+  }
 }
 
 export const parkingRepository = new ParkingRepository();
