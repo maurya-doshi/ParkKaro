@@ -52,16 +52,36 @@ export const BookingConfirmationPage: React.FC = () => {
         </div>
 
         {/* QR Access Pass Card */}
-        <div className="mb-8">
-          <QRDisplay
-            bookingId={booking.bookingId}
-            verificationCode={booking.qrVerificationCode}
-            qrData={booking.qrData}
-            listingTitle={booking.listingTitle}
-            listingAddress={booking.listingAddress}
-            startTime={booking.startTime}
-          />
-        </div>
+  <div className="mb-8">
+    <QRDisplay
+      bookingId={booking.bookingId}
+      verificationCode={booking.qrVerificationCode}
+      qrData={booking.qrData}
+      listingTitle={booking.listingTitle}
+      listingAddress={booking.listingAddress}
+      startTime={booking.startTime}
+    />
+    {/* Add to Calendar button */}
+    <button
+      type="button"
+      onClick={() => {
+        const start = new Date(booking.startTime);
+        const end = new Date(booking.endTime);
+        const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${formatDate(start)}\nDTEND:${formatDate(end)}\nSUMMARY:Parking Reservation at ${booking.listingTitle}\nDESCRIPTION:Location - ${booking.listingAddress}\nEND:VEVENT\nEND:VCALENDAR`;
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `parking-${booking.bookingId}.ics`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }}
+      className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-xl shadow-sm transition"
+    >
+      Add to Calendar
+    </button>
+  </div>
 
         {/* Booking Details Card */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4 mb-8">

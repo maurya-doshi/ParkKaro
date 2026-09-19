@@ -112,6 +112,10 @@ export const MapPanel: React.FC<MapPanelProps> = ({
           <div
             key={listing.listingId}
             onClick={() => handlePinClick(listing)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePinClick(listing); }}
+            tabIndex={0}
+            title={`₹${listing.pricePerHour}/hr • Rating ${listing.rating.toFixed(1)}`}
+            aria-label={`Parking spot ${listing.title}, price ₹${listing.pricePerHour} per hour, rating ${listing.rating.toFixed(1)}`}
             style={{
               left: `${coords.x}%`,
               top: `${coords.y}%`,
