@@ -20,11 +20,13 @@ Users → S3 (Frontend) → API Gateway → Lambda (Express.js) → DynamoDB
 
 ```
 infrastructure/
+├── .env.example               # Environment variables template for prod and local
 ├── template.yaml              # SAM/CloudFormation template (all AWS resources)
-├── samconfig.toml             # SAM CLI deployment configuration
+├── samconfig.toml             # SAM CLI deployment configuration (safe mode default)
 ├── package.json               # Scripts & dependencies
 ├── lambda/
-│   └── lambda.ts              # Lambda handler (wraps Express app)
+│   ├── lambda.ts              # TypeScript Lambda handler (wraps Express app)
+│   └── lambda.js              # Pre-compiled JS Lambda handler (keeps backend/src clean)
 └── scripts/
     ├── deploy.sh              # Full deployment script (Linux/macOS)
     ├── deploy.ps1             # Full deployment script (Windows)
@@ -33,15 +35,28 @@ infrastructure/
     └── s3-presign.ts          # S3 presigned URL generator
 ```
 
+## DynamoDB Safety (Preserving Existing Data)
+
+> 🛡️ **Zero Data Loss Guarantee:**
+> - `samconfig.toml` defaults to `CreateDynamoDBTables=false` in production.
+> - Deploy scripts default to **safe mode**, leaving existing tables untouched.
+> - All tables have `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain`.
+> - The Lambda IAM role uses wildcard ARNs (`parkshare-*`) to access any pre-existing or CloudFormation-managed tables.
+> - To deploy to a clean account where tables do NOT exist yet, pass `-CreateTables` (PowerShell) or `--create-tables` (Bash), or use the `production-fresh` SAM profile.
+
 ## Quick Start
 
-### Deploy to AWS
+### Deploy to AWS (Safe Mode — preserves existing tables)
 
 ```bash
 cd infrastructure
 npm install
-./scripts/deploy.sh          # Linux/macOS
-.\scripts\deploy.ps1         # Windows
+./scripts/deploy.sh          # Linux/macOS (safe mode)
+.\scripts\deploy.ps1         # Windows (safe mode)
+
+# For fresh deployment with table creation:
+./scripts/deploy.sh --create-tables
+.\scripts\deploy.ps1 -CreateTables
 ```
 
 ### Local Development

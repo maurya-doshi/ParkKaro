@@ -179,13 +179,15 @@ npm run build
 
 #### 3. Prepare Lambda Handler
 
-The Lambda handler (`infrastructure/lambda/lambda.ts`) wraps the Express app:
+The Lambda handler (`infrastructure/lambda/lambda.js`) wraps the Express app using `serverless-http`:
 
 ```bash
-# Copy to backend src and compile
-cp infrastructure/lambda/lambda.ts backend/src/lambda.ts
-cd backend
-npx tsc src/lambda.ts --outDir dist --esModuleInterop --module commonjs --target ES2020 --resolveJsonModule --skipLibCheck
+# Copy pre-compiled Lambda adapter directly into backend/dist (keeps backend/src clean)
+mkdir -p backend/dist
+cp infrastructure/lambda/lambda.js backend/dist/lambda.js
+
+# Install serverless-http runtime dependency (non-saving)
+cd backend && npm install --no-save serverless-http
 ```
 
 #### 4. Validate SAM Template
@@ -201,19 +203,36 @@ sam validate --template-file template.yaml
 sam build --template-file template.yaml
 ```
 
-#### 6. Deploy
+#### 6. Deploy (Safe vs Fresh Mode)
 
+> 🛡️ **CRITICAL DYNAMODB SAFETY:**
+> By default, `CreateDynamoDBTables=false` in production. This preserves all existing DynamoDB tables, schemas, and seeded data. The backend Lambda accesses existing tables seamlessly via wildcard IAM permissions.
+
+**Safe Deployment (Existing DynamoDB tables preserved):**
 ```bash
-# First deployment (creates S3 bucket for artifacts)
+# Deploys API Gateway, Lambda, Cognito, S3, CloudWatch WITHOUT touching DynamoDB tables
 sam deploy \
   --stack-name parkshare-production \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameter-overrides Environment=production \
+  --parameter-overrides Environment=production CreateDynamoDBTables=false \
   --resolve-s3 \
   --tags "Project=ParkShare Environment=production"
+```
 
-# Subsequent deployments
-sam deploy
+**Fresh Deployment (First-time setup when no tables exist):**
+```bash
+# Creates all 14 DynamoDB tables with Retain policies
+sam deploy \
+  --stack-name parkshare-production \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+  --parameter-overrides Environment=production CreateDynamoDBTables=true \
+  --resolve-s3 \
+  --tags "Project=ParkShare Environment=production"
+```
+
+**Subsequent deployments:**
+```bash
+sam deploy --config-env production
 ```
 
 #### 7. Get Stack Outputs
