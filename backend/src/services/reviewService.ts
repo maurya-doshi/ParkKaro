@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { reviewRepository } from '../repositories/reviewRepository';
 import { bookingRepository } from '../repositories/bookingRepository';
 import { parkingRepository } from '../repositories/parkingRepository';
+import { notificationRepository } from '../repositories/notificationRepository';
 import { Review, CreateReviewInput } from '../models/Review';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '../utils/errors';
 
@@ -65,6 +66,22 @@ export class ReviewService {
       await this.updateListingRating(input.listingId);
     } catch {
       // Non-critical: listing rating update can fail without blocking review creation
+    }
+
+    // Notify listing host
+    try {
+      const listing = await parkingRepository.findById(input.listingId);
+      if (listing?.hostId) {
+        await notificationRepository.create({
+          userId: listing.hostId,
+          type: 'REVIEW_RECEIVED',
+          title: 'New Review Received',
+          message: `A driver left a ${input.rating}-star review on "${listing.title}".`,
+          data: { reviewId, listingId: input.listingId, rating: String(input.rating) },
+        });
+      }
+    } catch {
+      // Non-critical
     }
 
     return created;

@@ -1090,6 +1090,47 @@ Get payment details.
 
 ### GET /notifications
 
+List notifications for the authenticated user (newest first).
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | Any |
+| **Query Params** | `limit` (number, default: 50) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "userId": "user_driver1",
+        "notificationId": "2026-09-18T10:00:00.000Z#notif_123",
+        "type": "BOOKING_CONFIRMED",
+        "title": "Booking Confirmed!",
+        "message": "Your parking reservation at Covered Parking Near Forum Mall is confirmed.",
+        "data": { "bookingId": "booking_def456", "listingId": "listing_abc123" },
+        "read": false,
+        "createdAt": "2026-09-18T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "count": 1,
+      "limit": 50,
+      "nextToken": null
+    }
+  }
+}
+```
+
+---
+
+### GET /notifications/unread-count
+
+Get count of unread notifications for the user.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
@@ -1101,17 +1142,6 @@ Get payment details.
 {
   "success": true,
   "data": {
-    "items": [
-      {
-        "notificationId": "2026-09-18T10:00:00.000Z#notif_123",
-        "type": "BOOKING_CONFIRMED",
-        "title": "Booking Confirmed",
-        "message": "Your booking at Covered Parking Near Forum Mall is confirmed.",
-        "data": { "bookingId": "booking_def456", "listingId": "listing_abc123" },
-        "read": false,
-        "createdAt": "2026-09-18T10:00:00.000Z"
-      }
-    ],
     "unreadCount": 3
   }
 }
@@ -1119,28 +1149,102 @@ Get payment details.
 
 ---
 
-### POST /notifications/{id}/read
+### PATCH /notifications/{id}/read (or POST /notifications/{id}/read)
 
-Mark notification as read.
+Mark a single notification as read. Caller must be the notification recipient.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | Any (own) |
+| **Role** | Notification recipient |
+| **URL Parameter** | `id`: URL-encoded notificationId (e.g. `2026-09-18T10%3A00%3A00.000Z%23notif_123`) |
 
 **Response (200):**
 
 ```json
-{ "success": true, "data": { "message": "Notification marked as read" } }
+{
+  "success": true,
+  "data": {
+    "message": "Notification marked as read"
+  }
+}
+```
+
+**Errors:**
+- `404 NOT_FOUND` — Notification not found or does not belong to user.
+
+---
+
+### PATCH /notifications/read-all
+
+Mark all notifications as read for the authenticated user.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | Any |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "All notifications marked as read"
+  }
+}
 ```
 
 ---
 
 ## Messaging
 
+### POST /conversations
+
+Get or create a conversation between the authenticated user and another user. Idempotent: if a conversation already exists between the two users, returns the existing record.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | Any |
+
+**Request Body:**
+
+```json
+{
+  "otherUserId": "user_host1",
+  "listingId": "listing_abc123",
+  "bookingId": "booking_def456"
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "conversationId": "conv_123456789012",
+    "participants": ["user_driver1", "user_host1"],
+    "participant1": "user_driver1",
+    "participant2": "user_host1",
+    "listingId": "listing_abc123",
+    "bookingId": "booking_def456",
+    "lastMessageAt": "2026-09-19T00:00:00.000Z",
+    "lastMessagePreview": "",
+    "createdAt": "2026-09-19T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:**
+- `400 VALIDATION_ERROR` — Starting conversation with oneself (`otherUserId === userId`).
+
+---
+
 ### GET /conversations
 
-List user's conversations.
+List all conversations for the authenticated user.
 
 | Field | Value |
 |-------|-------|
@@ -1155,12 +1259,12 @@ List user's conversations.
   "data": {
     "items": [
       {
-        "conversationId": "conv_abc",
+        "conversationId": "conv_123456789012",
         "participants": ["user_driver1", "user_host1"],
         "listingId": "listing_abc123",
-        "lastMessageAt": "2026-09-18T14:00:00.000Z",
-        "lastMessagePreview": "Is the spot available...",
-        "createdAt": "2026-09-18T13:00:00.000Z"
+        "lastMessageAt": "2026-09-19T00:05:00.000Z",
+        "lastMessagePreview": "Is the parking spot available tomorrow?",
+        "createdAt": "2026-09-19T00:00:00.000Z"
       }
     ]
   }
@@ -1169,20 +1273,61 @@ List user's conversations.
 
 ---
 
-### GET /conversations/{id}/messages
+### GET /conversations/{id}
+
+Get a conversation by ID. User must be one of the participants.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
 | **Role** | Participant only |
 
-**Response (200):** Paginated list of messages.
+**Response (200):** Conversation object.
+
+**Errors:**
+- `403 FORBIDDEN` — User is not a participant in the conversation.
+- `404 NOT_FOUND` — Conversation not found.
+
+---
+
+### GET /conversations/{id}/messages
+
+Get message history for a conversation (chronological order).
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | Participant only |
+| **Query Params** | `limit` (number, default: 100) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "conversationId": "conv_123456789012",
+        "messageId": "2026-09-19T00:05:00.000Z#uuid",
+        "senderId": "user_driver1",
+        "content": "Is the parking spot available tomorrow?",
+        "createdAt": "2026-09-19T00:05:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**Errors:**
+- `403 FORBIDDEN` — Non-participant access blocked.
+- `404 NOT_FOUND` — Conversation does not exist.
 
 ---
 
 ### POST /conversations/{id}/messages
 
-Send a message.
+Send a message within an existing conversation. Updates the conversation's preview and timestamp, and generates a real-time `NEW_MESSAGE` notification for the other participant.
 
 | Field | Value |
 |-------|-------|
@@ -1192,10 +1337,30 @@ Send a message.
 **Request Body:**
 
 ```json
-{ "content": "Is the parking spot available tomorrow?" }
+{
+  "content": "Yes, the spot is reserved and ready for your arrival."
+}
 ```
 
-**Response (201):** Created message object.
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "conversationId": "conv_123456789012",
+    "messageId": "2026-09-19T00:06:00.000Z#uuid",
+    "senderId": "user_host1",
+    "content": "Yes, the spot is reserved and ready for your arrival.",
+    "createdAt": "2026-09-19T00:06:00.000Z"
+  }
+}
+```
+
+**Errors:**
+- `400 VALIDATION_ERROR` — Empty content or exceeds 2000 characters.
+- `403 FORBIDDEN` — Non-participant cannot send messages.
+- `404 NOT_FOUND` — Conversation not found.
 
 ---
 
@@ -1203,69 +1368,121 @@ Send a message.
 
 ### POST /disputes
 
+Raise a dispute for a booking. Caller must be the driver or host of the booking. Booking cannot be in `CANCELLED` status. Prevents duplicate active disputes on the same booking. Automatically sends a `DISPUTE_UPDATE` notification to the other party.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER, HOST |
+| **Role** | Booking Driver or Host |
 
 **Request Body:**
 
 ```json
 {
   "bookingId": "booking_def456",
-  "reason": "Spot was occupied by another vehicle",
-  "description": "I arrived and found the spot taken.",
-  "evidence": ["https://s3.../photo1.jpg"]
+  "reason": "Slot was occupied by another vehicle",
+  "description": "Upon arrival at 10:00 AM, another vehicle was parked in the reserved space.",
+  "evidence": ["https://s3.amazonaws.com/parkshare/evidence1.jpg"]
 }
 ```
 
-**Response (201):** Dispute object with status `OPEN`.
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "disputeId": "dispute_123456789012",
+    "bookingId": "booking_def456",
+    "reportedBy": "user_driver1",
+    "reason": "Slot was occupied by another vehicle",
+    "description": "Upon arrival at 10:00 AM, another vehicle was parked in the reserved space.",
+    "evidence": ["https://s3.amazonaws.com/parkshare/evidence1.jpg"],
+    "status": "OPEN",
+    "createdAt": "2026-09-19T10:15:00.000Z",
+    "updatedAt": "2026-09-19T10:15:00.000Z"
+  }
+}
+```
+
+**Errors:**
+- `400 VALIDATION_ERROR` — Cancelled booking or an active dispute already exists.
+- `403 FORBIDDEN` — User is neither driver nor host of the booking.
+- `404 NOT_FOUND` — Booking does not exist.
 
 ---
 
 ### GET /disputes
 
-List user's disputes.
+List disputes submitted by the authenticated user.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | DRIVER, HOST, ADMIN |
+| **Role** | Any |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [ ... ]
+  }
+}
+```
 
 ---
 
 ### GET /disputes/{id}
 
+Get dispute details. Caller must be the reporter, the booking driver/host, or an ADMIN.
+
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | Involved party or ADMIN |
+| **Role** | Booking party or ADMIN |
+
+**Response (200):** Dispute object.
+
+**Errors:**
+- `403 FORBIDDEN` — Unauthorized viewer.
+- `404 NOT_FOUND` — Dispute not found.
 
 ---
 
 ### PATCH /disputes/{id}
 
-Update dispute (admin resolution).
+Update dispute status or provide resolution. Only administrators can transition to `RESOLVED` or `DISMISSED`. Automatically sends a `DISPUTE_UPDATE` notification to the dispute reporter.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | ADMIN |
+| **Role** | ADMIN (for RESOLVED/DISMISSED) |
 
 **Request Body:**
 
 ```json
 {
   "status": "RESOLVED",
-  "resolution": "Full refund issued to driver."
+  "resolution": "Full refund of ₹88 issued to driver."
 }
 ```
+
+**Response (200):** Updated Dispute object.
+
+**Errors:**
+- `400 VALIDATION_ERROR` — Invalid status transition (e.g. from RESOLVED to OPEN).
+- `403 FORBIDDEN` — Non-admin attempting to resolve/dismiss.
+- `404 NOT_FOUND` — Dispute not found.
 
 ---
 
 ## Reports
 
 ### POST /reports
+
+Submit a report regarding a listing, user, booking, or message.
 
 | Field | Value |
 |-------|-------|
@@ -1279,22 +1496,106 @@ Update dispute (admin resolution).
   "targetType": "LISTING",
   "targetId": "listing_abc123",
   "reason": "Misleading photos",
-  "description": "The photos don't match the actual location."
+  "description": "The photos do not match the physical location."
 }
 ```
 
-**Response (201):** Report object.
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "reportId": "report_123456789012",
+    "reportedBy": "user_driver1",
+    "targetType": "LISTING",
+    "targetId": "listing_abc123",
+    "reason": "Misleading photos",
+    "description": "The photos do not match the physical location.",
+    "status": "PENDING",
+    "createdAt": "2026-09-19T10:30:00.000Z",
+    "updatedAt": "2026-09-19T10:30:00.000Z"
+  }
+}
+```
 
 ---
 
-### GET /reports
+### GET /reports (and GET /reports/me)
 
-List reports. Users see their own reports; admins see all.
+List reports. Standard users see their own submitted reports (`/reports/me`); administrators calling `/reports` or `/reports/all` can view all system reports.
 
 | Field | Value |
 |-------|-------|
 | **Auth** | Required |
-| **Role** | Any (own), ADMIN (all) |
+| **Role** | Any (own reports), ADMIN (all reports) |
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [ ... ]
+  }
+}
+```
+
+---
+
+### GET /reports/all (Admin)
+
+Admin endpoint to list all reports across the platform with optional status filter.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+| **Query Params** | `status` (`PENDING`, `REVIEWED`, `ACTIONED`, `DISMISSED`) |
+
+**Response (200):** `{ success: true, data: { items: [ ... ] } }`
+
+---
+
+### GET /reports/{id}
+
+Get report details. Accessible by the reporter or an ADMIN.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | Reporter or ADMIN |
+
+**Response (200):** Report object.
+
+**Errors:**
+- `403 FORBIDDEN` — Non-reporter, non-admin.
+- `404 NOT_FOUND` — Report not found.
+
+---
+
+### PATCH /reports/{id}/status (Admin)
+
+Update the review status of a report.
+
+| Field | Value |
+|-------|-------|
+| **Auth** | Required |
+| **Role** | ADMIN |
+
+**Request Body:**
+
+```json
+{
+  "status": "ACTIONED"
+}
+```
+
+**Response (200):** Updated Report object.
+
+**Errors:**
+- `403 FORBIDDEN` — Non-admin attempt.
+- `404 NOT_FOUND` — Report not found.
 
 ---
 
@@ -1628,7 +1929,7 @@ ACTIVE → DISPUTED
 
 ### Notification Types
 
-`BOOKING_CONFIRMED`, `BOOKING_CANCELLED`, `BOOKING_UPCOMING`, `PAYMENT_UPDATE`, `NEW_HOST_BOOKING`, `REVIEW_REMINDER`, `DISPUTE_UPDATE`, `SYSTEM`
+`BOOKING_CONFIRMED`, `BOOKING_CANCELLED`, `BOOKING_UPCOMING`, `PAYMENT_UPDATE`, `NEW_HOST_BOOKING`, `REVIEW_REMINDER`, `REVIEW_RECEIVED`, `DISPUTE_UPDATE`, `PAYOUT_UPDATE`, `NEW_MESSAGE`, `SYSTEM`
 
 ### Report Target Types
 

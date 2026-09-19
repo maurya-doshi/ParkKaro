@@ -9,7 +9,10 @@ export type NotificationType =
   | 'PAYMENT_UPDATE'
   | 'NEW_HOST_BOOKING'
   | 'REVIEW_REMINDER'
+  | 'REVIEW_RECEIVED'
   | 'DISPUTE_UPDATE'
+  | 'PAYOUT_UPDATE'
+  | 'NEW_MESSAGE'
   | 'SYSTEM';
 
 export interface Notification {

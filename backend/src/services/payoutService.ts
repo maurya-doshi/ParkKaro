@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { payoutRepository } from '../repositories/payoutRepository';
 import { bookingRepository } from '../repositories/bookingRepository';
+import { notificationRepository } from '../repositories/notificationRepository';
 import { Payout } from '../models/Payout';
 import { ValidationError, ForbiddenError } from '../utils/errors';
 
@@ -76,7 +77,21 @@ export class PayoutService {
       updatedAt: timestamp,
     };
 
-    return payoutRepository.create(payout);
+    const created = await payoutRepository.create(payout);
+
+    try {
+      await notificationRepository.create({
+        userId: hostId,
+        type: 'PAYOUT_UPDATE',
+        title: 'Payout Processed',
+        message: `Your payout of ₹${roundedAmount} for period ${period} has been processed.`,
+        data: { payoutId, amount: String(roundedAmount) },
+      });
+    } catch {
+      // Non-critical
+    }
+
+    return created;
   }
 
   /**

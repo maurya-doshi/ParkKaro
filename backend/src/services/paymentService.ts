@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { paymentRepository } from '../repositories/paymentRepository';
 import { bookingRepository } from '../repositories/bookingRepository';
+import { notificationRepository } from '../repositories/notificationRepository';
 import { Payment, PaymentProviderStatus } from '../models/Payment';
 import { getPaymentProvider } from './payment/factory';
 import { VALID_PAYMENT_TRANSITIONS } from './payment/types';
@@ -116,6 +117,19 @@ export class PaymentService {
 
     // Synchronize booking payment status
     await bookingRepository.updatePaymentStatus(payment.bookingId, targetStatus);
+
+    // Fire notification (best-effort)
+    try {
+      await notificationRepository.create({
+        userId: payment.userId,
+        type: 'PAYMENT_UPDATE',
+        title: result.success ? 'Payment Successful' : 'Payment Failed',
+        message: result.success
+          ? `Your payment of ₹${payment.amount} was successful.`
+          : `Your payment of ₹${payment.amount} failed. Please try again.`,
+        data: { paymentId, bookingId: payment.bookingId, status: targetStatus },
+      });
+    } catch { /* non-critical */ }
 
     return updated;
   }
