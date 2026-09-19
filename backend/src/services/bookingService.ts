@@ -317,6 +317,19 @@ export class BookingService {
     if (!updated) {
       throw new NotFoundError('Booking', bookingId);
     }
+
+    try {
+      await notificationRepository.create({
+        userId: booking.driverId,
+        type: 'REVIEW_REMINDER',
+        title: 'Booking Completed',
+        message: `Your booking at ${booking.listingId} is completed. Please leave a review!`,
+        data: { bookingId, listingId: booking.listingId },
+      });
+    } catch {
+      // Non-critical
+    }
+
     return updated;
   }
 

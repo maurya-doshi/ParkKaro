@@ -64,7 +64,19 @@ npm test
 npm run seed
 ```
 
-Creates ~50 demo parking listings across Bengaluru areas.
+Creates deterministic demo parking listings across Bengaluru, 12 demo users (3 drivers, 8 hosts, 1 admin), vehicles, favorites, bookings, payments, payouts, reviews, notifications, conversations, and reports.
+
+#### Demo Identities (for `x-demo-user-id` and `x-demo-role` headers)
+
+| Role | User ID | Name | Email |
+|------|---------|------|-------|
+| `DRIVER` | `driver_demo_1` | Demo Driver Arjun | driver1@demo.parkshare.com |
+| `DRIVER` | `driver_demo_2` | Demo Driver Priya | driver2@demo.parkshare.com |
+| `DRIVER` | `driver_demo_3` | Demo Driver Rahul | driver3@demo.parkshare.com |
+| `HOST` | `host_demo_1` | Demo Host Vikram | host1@demo.parkshare.com |
+| `HOST` | `host_demo_2` | Demo Host Ananya | host2@demo.parkshare.com |
+| `HOST` | `host_demo_3` | Demo Host Rajesh | host3@demo.parkshare.com |
+| `ADMIN` | `admin_demo_1` | Demo Admin Pooja | admin@demo.parkshare.com |
 
 ## API Documentation
 
