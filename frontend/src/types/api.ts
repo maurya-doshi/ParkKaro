@@ -49,79 +49,65 @@ export interface PlatformReport {
 export interface HostDashboardStats {
   totalListings: number;
   activeListings: number;
+  totalBookings: number;
   upcomingBookings: number;
   activeBookings: number;
   completedBookings: number;
+  cancelledBookings: number;
   totalEarnings: number;
-  monthlyEarnings: number;
-  occupancyRate: number;
+  pendingEarnings: number;
   averageRating: number;
   recentBookings: Array<{
     bookingId: string;
-    listingTitle: string;
-    driverName: string;
+    driverId: string;
+    listingId: string;
     startTime: string;
     endTime: string;
-    amount: number;
-    status: string;
+    baseAmount: number;
+    platformFee: number;
+    totalAmount: number;
+    hostEarnings?: number;
+    bookingStatus: string;
+    paymentStatus: string;
   }>;
+  recentNotifications?: Array<any>;
 }
 
 export interface DriverDashboardStats {
   upcomingBookings: Array<{
     bookingId: string;
     listingId: string;
-    listingTitle?: string;
-    listingAddress?: string;
     startTime: string;
     endTime: string;
-    amount?: number;
-    totalAmount?: number;
+    baseAmount: number;
+    platformFee: number;
+    totalAmount: number;
     bookingStatus: string;
     qrVerificationCode?: string;
+    qrData?: string;
   }>;
-  pastBookings?: Array<{
-    bookingId: string;
-    listingId: string;
-    listingTitle?: string;
-    startTime: string;
-    endTime: string;
-    amount?: number;
-    totalAmount?: number;
-    bookingStatus: string;
-  }>;
-  recentBookings?: Array<{
-    bookingId: string;
-    listingId: string;
-    listingTitle?: string;
-    listingAddress?: string;
-    startTime: string;
-    endTime: string;
-    amount?: number;
-    totalAmount?: number;
-    bookingStatus: string;
-  }>;
-  completedBookings?: number;
-  cancelledBookings?: number;
-  totalBookings?: number;
   activeBooking: {
     bookingId: string;
     listingId: string;
-    listingTitle?: string;
-    listingAddress?: string;
     startTime: string;
     endTime: string;
-    amount?: number;
-    totalAmount?: number;
+    baseAmount: number;
+    platformFee: number;
+    totalAmount: number;
     bookingStatus: string;
     qrVerificationCode?: string;
+    qrData?: string;
     latitude?: number;
     longitude?: number;
   } | null;
+  completedBookings: number;
+  cancelledBookings: number;
+  totalBookings: number;
   favoriteCount: number;
   vehicleCount: number;
-  reviewCount?: number;
   unreadNotifications: number;
+  recentBookings?: Array<any>;
+  recentNotifications?: Array<any>;
 }
 
 export interface AdminAnalytics {

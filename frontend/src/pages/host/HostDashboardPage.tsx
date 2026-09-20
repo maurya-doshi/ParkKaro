@@ -61,13 +61,13 @@ export const HostDashboardPage: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Monthly Earnings
+              Pending Earnings
             </span>
             <p className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">
-              ₹{stats.monthlyEarnings.toLocaleString('en-IN')}
+              ₹{(stats.pendingEarnings || 0).toLocaleString('en-IN')}
             </p>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
-              Total lifetime: ₹{stats.totalEarnings.toLocaleString('en-IN')}
+              Total lifetime: ₹{(stats.totalEarnings || 0).toLocaleString('en-IN')}
             </span>
           </div>
 
@@ -76,7 +76,7 @@ export const HostDashboardPage: React.FC = () => {
               Active Listings
             </span>
             <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
-              {stats.activeListings} / {stats.totalListings}
+              {stats.activeListings || 0} / {stats.totalListings || 0}
             </p>
             <Link
               to="/host/listings"
@@ -91,24 +91,24 @@ export const HostDashboardPage: React.FC = () => {
               Upcoming Bookings
             </span>
             <p className="text-2xl sm:text-3xl font-black text-blue-600 mt-1">
-              {stats.upcomingBookings}
+              {stats.upcomingBookings || 0}
             </p>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
-              {stats.activeBookings} guest currently parked
+              {stats.activeBookings || 0} guest currently parked
             </span>
           </div>
 
           <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Occupancy & Rating
+              Total Bookings & Rating
             </span>
             <div className="flex items-baseline gap-2 mt-1">
               <p className="text-2xl sm:text-3xl font-black text-slate-900">
-                {Math.round(stats.occupancyRate * 100)}%
+                {stats.totalBookings || 0}
               </p>
               <div className="flex items-center text-xs font-bold text-amber-500">
                 <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
-                <span>{stats.averageRating}</span>
+                <span>{stats.averageRating || 0}</span>
               </div>
             </div>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
@@ -144,8 +144,12 @@ export const HostDashboardPage: React.FC = () => {
               <tbody className="divide-y divide-slate-100">
                 {stats.recentBookings.map((b) => (
                   <tr key={b.bookingId} className="hover:bg-slate-50 transition">
-                    <td className="py-3.5 font-bold text-slate-900">{b.driverName}</td>
-                    <td className="py-3.5 text-slate-600 font-medium">{b.listingTitle}</td>
+                    <td className="py-3.5 font-bold text-slate-900" title={b.driverId}>
+                      User {b.driverId.split('_').pop()?.toUpperCase() || 'NA'}
+                    </td>
+                    <td className="py-3.5 text-slate-600 font-medium" title={b.listingId}>
+                      Space {b.listingId.split('_').pop()?.toUpperCase() || 'NA'}
+                    </td>
                     <td className="py-3.5 text-slate-500">
                       {new Date(b.startTime).toLocaleDateString('en-IN', {
                         month: 'short',
@@ -157,11 +161,11 @@ export const HostDashboardPage: React.FC = () => {
                       })}
                     </td>
                     <td className="py-3.5 font-black text-emerald-600">
-                      ₹{Math.round(b.amount * 0.9)}
+                      ₹{Math.round(b.hostEarnings !== undefined ? b.hostEarnings : Math.max(0, b.baseAmount - b.platformFee))}
                     </td>
                     <td className="py-3.5">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700">
-                        {b.status}
+                        {b.bookingStatus}
                       </span>
                     </td>
                   </tr>
