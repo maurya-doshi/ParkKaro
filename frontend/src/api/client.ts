@@ -58,11 +58,11 @@ export class ApiClient {
           defaultRole = 'ADMIN';
         }
 
-        // Map obsolete user_* IDs to valid demo seed IDs
+        // Map new demo IDs to the original database seed IDs
         let effectiveUserId = user.userId || defaultUserId;
-        if (effectiveUserId === 'user_driver1') effectiveUserId = 'driver_demo_1';
-        if (effectiveUserId === 'user_host1') effectiveUserId = 'host_demo_1';
-        if (effectiveUserId === 'user_admin1') effectiveUserId = 'admin_demo_1';
+        if (effectiveUserId === 'driver_demo_1') effectiveUserId = 'user_driver1';
+        if (effectiveUserId === 'host_demo_1') effectiveUserId = 'user_host1';
+        if (effectiveUserId === 'admin_demo_1') effectiveUserId = 'user_admin1';
 
         headers['X-Demo-User-Id'] = effectiveUserId;
         headers['X-Demo-Email'] = user.email || `${effectiveUserId}@demo.parkshare.com`;
@@ -70,13 +70,13 @@ export class ApiClient {
         headers['X-Demo-Role'] = defaultRole;
       } catch (err) {
         console.warn('Failed parsing saved user', err);
-        headers['X-Demo-User-Id'] = 'driver_demo_1';
+        headers['X-Demo-User-Id'] = 'user_driver1';
         headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
         headers['X-Demo-Name'] = 'Demo Driver Arjun';
         headers['X-Demo-Role'] = 'DRIVER';
       }
     } else {
-      headers['X-Demo-User-Id'] = 'driver_demo_1';
+      headers['X-Demo-User-Id'] = 'user_driver1';
       headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
       headers['X-Demo-Name'] = 'Demo Driver Arjun';
       headers['X-Demo-Role'] = 'DRIVER';
