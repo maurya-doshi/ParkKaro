@@ -56,6 +56,8 @@ export class ApiClient {
         } else if (defaultRole === 'ADMIN' || user.userId === 'user_admin1' || user.userId === 'admin_demo_1') {
           defaultUserId = 'admin_demo_1';
           defaultRole = 'ADMIN';
+        }
+
         // Map obsolete user_* IDs to valid demo seed IDs
         let effectiveUserId = user.userId || defaultUserId;
         if (effectiveUserId === 'user_driver1') effectiveUserId = 'driver_demo_1';
