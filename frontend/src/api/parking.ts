@@ -131,7 +131,7 @@ export const parkingApi = {
    * GET /parking/{id}/reviews
    */
   async getReviews(id: string): Promise<any[]> {
-    const res = await apiClient.get<any>(`/parking/${id}/reviews`);
+    const res = await apiClient.get<any>(`/reviews/listing/${id}`);
     if (res && res.data) {
       if (Array.isArray(res.data)) return res.data;
       if (Array.isArray(res.data.items)) return res.data.items;

@@ -7,7 +7,7 @@ export const reviewsApi = {
    * GET /parking/{id}/reviews
    */
   async getByListing(listingId: string): Promise<Review[]> {
-    const res = await apiClient.get<any>(`/parking/${listingId}/reviews`);
+    const res = await apiClient.get<any>(`/reviews/listing/${listingId}`);
     if (res && res.data) {
       if (Array.isArray(res.data)) return res.data;
       if (Array.isArray(res.data.items)) return res.data.items;
