@@ -1,0 +1,16 @@
+{
+  "name": "parkshare-ai",
+  "version": "1.0.0",
+  "description": "ParkShare — Amazon Bedrock AI Module (Person 4)",
+  "private": true,
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.540.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.3"
+  }
+}
