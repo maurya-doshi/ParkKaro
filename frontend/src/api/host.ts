@@ -3,7 +3,7 @@ import { HostDashboardStats } from '../types/api';
 
 export interface HostEarningsBreakdown {
   grossRevenue: number;
-  platformCommission: number;
+  platformFees: number;
   netEarnings: number;
   totalBookings: number;
   period: string;
@@ -11,7 +11,7 @@ export interface HostEarningsBreakdown {
     date: string;
     bookings: number;
     gross: number;
-    commission: number;
+    fees: number;
     net: number;
   }>;
 }
@@ -19,9 +19,9 @@ export interface HostEarningsBreakdown {
 export interface PayoutRecord {
   payoutId: string;
   amount: number;
-  status: 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED';
-  periodStart: string;
-  periodEnd: string;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  period: string;
+  currency: string;
   createdAt: string;
 }
 

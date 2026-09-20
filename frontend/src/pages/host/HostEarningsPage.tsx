@@ -147,7 +147,7 @@ export const HostEarningsPage: React.FC = () => {
               Platform Fee (10%)
             </span>
             <p className="text-2xl sm:text-3xl font-black text-slate-700 mt-1">
-              ₹{earnings.platformCommission.toLocaleString('en-IN')}
+              ₹{(earnings.platformFees || 0).toLocaleString('en-IN')}
             </p>
             <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
               Covers guarantee & AI
@@ -228,7 +228,7 @@ export const HostEarningsPage: React.FC = () => {
                   <tr key={p.payoutId} className="hover:bg-slate-50 transition">
                     <td className="py-3.5 font-mono font-bold text-slate-900">{p.payoutId}</td>
                     <td className="py-3.5 text-slate-600 font-medium">
-                      {p.periodStart} to {p.periodEnd}
+                      {p.period}
                     </td>
                     <td className="py-3.5 font-black text-emerald-600 text-sm">
                       ₹{p.amount.toLocaleString('en-IN')}
@@ -243,7 +243,7 @@ export const HostEarningsPage: React.FC = () => {
                     <td className="py-3.5">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                          p.status === 'PAID'
+                          p.status === 'COMPLETED'
                             ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-amber-100 text-amber-800'
                         }`}
