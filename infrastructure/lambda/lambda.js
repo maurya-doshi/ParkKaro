@@ -813,9 +813,12 @@ __export(lambda_exports, {
 });
 module.exports = __toCommonJS(lambda_exports);
 var import_serverless_http = __toESM(require_serverless_http());
-var import_app = require("./src/app");
+var import_app;
+try {
+  import_app = require("./backend/src/app");
+} catch (e) {
+  import_app = require("./src/app");
+}
 var handler = (0, import_serverless_http.default)(import_app.app);
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  handler
-});
+module.exports.handler = handler;
+
