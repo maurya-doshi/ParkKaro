@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { parkingApi } from '../../api/parking';
+import { apiClient } from '../../api/client';
 import { ParkingListing } from '../../types/parking';
 import { PriceDisplay } from '../../components/common/PriceDisplay';
 import { Rating } from '../../components/common/Rating';
@@ -16,12 +17,16 @@ export const HostListingsPage: React.FC = () => {
   const loadListings = async () => {
     setLoading(true);
     try {
-      const res = await parkingApi.search();
-      // Filter host listings
-      const hostSpots = res.items.filter(
-        (l) => l.hostId === 'user_host1' || l.hostId === 'user_host2'
+      // 1. Fetch host's listing summaries
+      const summaryRes = await apiClient.get<any>('/host/listings-summary');
+      const data = summaryRes.data || summaryRes;
+      const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+
+      // 2. Fetch full listing details for each
+      const fullListings = await Promise.all(
+        items.map((item: any) => parkingApi.getById(item.listingId))
       );
-      setListings(hostSpots.length > 0 ? hostSpots : res.items.slice(0, 3));
+      setListings(fullListings);
     } catch (e) {
       console.error(e);
     } finally {
