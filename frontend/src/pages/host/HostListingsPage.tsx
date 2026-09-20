@@ -36,7 +36,7 @@ export const HostListingsPage: React.FC = () => {
   const handleToggleStatus = async (listing: ParkingListing) => {
     const nextStatus = listing.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      await parkingApi.update(listing.listingId, { status: nextStatus });
+      await parkingApi.updateStatus(listing.listingId, nextStatus);
       setListings((prev) =>
         prev.map((l) => (l.listingId === listing.listingId ? { ...l, status: nextStatus } : l))
       );
