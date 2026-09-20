@@ -61,14 +61,19 @@ describe('DynamoDB Repositories', () => {
       expect(listings[0].area).toBe('Indiranagar');
     });
 
-    it('should query active listings', async () => {
-      (docClient.send as jest.Mock).mockResolvedValueOnce({
-        Items: [{ listingId: 'p-1', status: 'ACTIVE' }],
-      });
+    it('should query active and available listings', async () => {
+      (docClient.send as jest.Mock)
+        .mockResolvedValueOnce({
+          Items: [{ listingId: 'p-1', status: 'ACTIVE' }],
+        })
+        .mockResolvedValueOnce({
+          Items: [{ listingId: 'p-2', status: 'AVAILABLE' }],
+        });
 
       const active = await parkingRepository.listActive();
-      expect(active.length).toBe(1);
+      expect(active.length).toBe(2);
       expect(active[0].status).toBe('ACTIVE');
+      expect(active[1].status).toBe('AVAILABLE');
     });
   });
 

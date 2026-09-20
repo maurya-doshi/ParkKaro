@@ -4,7 +4,6 @@
     "module": "commonjs",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,10 +14,13 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "baseUrl": ".",
+    "rootDirs": [".", "../ai"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@aws-sdk/client-bedrock-runtime": ["./node_modules/@aws-sdk/client-bedrock-runtime"],
+      "zod": ["./node_modules/zod"]
     }
   },
-  "include": ["src/**/*", "scripts/**/*", "tests/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "tests/**/*", "../ai/**/*"],
   "exclude": ["node_modules", "dist"]
 }

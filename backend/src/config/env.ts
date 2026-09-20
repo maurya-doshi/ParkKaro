@@ -6,7 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const env = {
   // AWS
-  awsRegion: process.env.AWS_REGION || 'ap-south-1',
+  awsRegion: process.env.AWS_REGION || process.env.AWS_REGION_NAME || 'ap-south-1',
   dynamoDbEndpoint: process.env.DYNAMODB_ENDPOINT || undefined,
   dynamoDbTablePrefix: process.env.DYNAMODB_TABLE_PREFIX || 'parkshare',
 
@@ -30,6 +30,9 @@ export const env = {
 
   // Auth
   authMode: (process.env.AUTH_MODE || 'demo') as 'cognito' | 'demo',
+
+  // Payment
+  paymentProvider: (process.env.PAYMENT_PROVIDER || 'MOCK') as 'MOCK' | 'RAZORPAY' | 'STRIPE',
 };
 
 /**

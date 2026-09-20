@@ -156,6 +156,39 @@ describe('Parking Listing APIs', () => {
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe('PARKING_LISTING_NOT_FOUND');
     });
+
+    it('should return 200 and normalize production listing with status AVAILABLE', async () => {
+      const productionListing: any = {
+        listingId: 'list_11424333',
+        hostId: 'host_demo_1',
+        title: 'Prime Downtown Bandra Spot',
+        description: 'Covered, secure parking in downtown Bandra.',
+        address: '101 Hill Road',
+        area: 'Bandra',
+        city: 'Mumbai',
+        latitude: 19.0596,
+        longitude: 72.8295,
+        pricePerHour: 60,
+        totalSlots: 3,
+        availableSlots: 3,
+        status: 'AVAILABLE',
+        amenities: {},
+        vehicleTypes: {},
+        createdAt: '2026-09-20T10:30:00.000Z',
+        updatedAt: '2026-09-20T10:30:00.000Z',
+      };
+
+      (parkingRepository.findById as jest.Mock).mockResolvedValueOnce(productionListing);
+
+      const res = await request(app).get('/parking/list_11424333');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.listingId).toBe('list_11424333');
+      expect(res.body.data.status).toBe('AVAILABLE');
+      expect(Array.isArray(res.body.data.amenities)).toBe(true);
+      expect(Array.isArray(res.body.data.vehicleTypes)).toBe(true);
+      expect(res.body.data.capacity).toBe(3);
+    });
   });
 
   describe('PUT /parking/:id', () => {

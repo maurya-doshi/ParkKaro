@@ -47,16 +47,19 @@ export class SearchService {
     }
 
     // Filter in-memory for secondary attributes & complex combinations
-    let filtered = candidates.filter((item) => item.status === 'ACTIVE');
+    let filtered = candidates.filter((item) => {
+      const s = (item.status || '').toUpperCase();
+      return s === 'ACTIVE' || s === 'AVAILABLE' || !item.status;
+    });
 
     if (params.area && !params.hostId) {
       const areaLower = params.area.toLowerCase();
-      filtered = filtered.filter((item) => item.area.toLowerCase().includes(areaLower));
+      filtered = filtered.filter((item) => (item.area || '').toLowerCase().includes(areaLower));
     }
 
     if (params.city && !params.hostId) {
       const cityLower = params.city.toLowerCase();
-      filtered = filtered.filter((item) => item.city.toLowerCase() === cityLower);
+      filtered = filtered.filter((item) => (item.city || '').toLowerCase() === cityLower);
     }
 
     if (params.minPrice !== undefined) {
@@ -72,9 +75,14 @@ export class SearchService {
     }
 
     if (params.vehicleType) {
-      filtered = filtered.filter((item) =>
-        item.vehicleTypes.includes(params.vehicleType as VehicleTypeEnum)
-      );
+      filtered = filtered.filter((item) => {
+        const types = Array.isArray(item.vehicleTypes)
+          ? item.vehicleTypes
+          : (typeof item.vehicleTypes === 'object' && item.vehicleTypes
+              ? Object.keys(item.vehicleTypes)
+              : []);
+        return types.map((t) => String(t).toUpperCase()).includes(params.vehicleType!.toUpperCase());
+      });
     }
 
     if (params.rating !== undefined) {
@@ -88,7 +96,11 @@ export class SearchService {
         .filter(Boolean);
 
       filtered = filtered.filter((item) => {
-        const itemAmenities = (item.amenities || []).map((a) => a.toLowerCase());
+        const itemAmenities = Array.isArray(item.amenities)
+          ? item.amenities.map((a) => String(a).toLowerCase())
+          : (typeof item.amenities === 'object' && item.amenities
+              ? Object.keys(item.amenities).map((a) => a.toLowerCase())
+              : []);
         return requestedAmenities.every((req) => itemAmenities.includes(req));
       });
     }
@@ -118,24 +130,30 @@ export class SearchService {
         distance = calculateHaversineDistance(
           params.lat!,
           params.lng!,
-          listing.latitude,
-          listing.longitude
+          typeof listing.latitude === 'number' ? listing.latitude : 0,
+          typeof listing.longitude === 'number' ? listing.longitude : 0
         );
       }
 
+      const listingAmenities = Array.isArray(listing.amenities)
+        ? listing.amenities
+        : (typeof listing.amenities === 'object' && listing.amenities
+            ? (Object.keys(listing.amenities) as AmenityType[])
+            : []);
+
       return {
         listingId: listing.listingId,
-        title: listing.title,
-        area: listing.area,
-        city: listing.city,
-        latitude: listing.latitude,
-        longitude: listing.longitude,
-        parkingType: listing.parkingType,
-        pricePerHour: listing.pricePerHour,
-        amenities: listing.amenities,
-        rating: listing.rating,
-        reviewCount: listing.reviewCount,
-        photos: listing.photos,
+        title: listing.title || 'Parking Spot',
+        area: listing.area || '',
+        city: listing.city || '',
+        latitude: typeof listing.latitude === 'number' ? listing.latitude : 0,
+        longitude: typeof listing.longitude === 'number' ? listing.longitude : 0,
+        parkingType: listing.parkingType || 'COVERED',
+        pricePerHour: typeof listing.pricePerHour === 'number' ? listing.pricePerHour : 0,
+        amenities: listingAmenities,
+        rating: typeof listing.rating === 'number' ? listing.rating : 0,
+        reviewCount: typeof listing.reviewCount === 'number' ? listing.reviewCount : 0,
+        photos: Array.isArray(listing.photos) ? listing.photos : [],
         ...(distance !== undefined ? { distance } : {}),
       };
     });

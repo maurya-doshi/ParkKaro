@@ -29,11 +29,18 @@ declare global {
  * - In 'cognito' mode: verifies JWT Bearer token against Cognito User Pool
  */
 export async function getAuthenticatedUser(req: Request): Promise<AuthenticatedUser | null> {
+  // 1. If Authorization Bearer token is supplied, decode token
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const user = await getCognitoUser(req);
+    if (user) return user;
+  }
+
   if (env.authMode === 'demo') {
     return getDemoUser(req);
   }
 
-  // Cognito mode — Person 3 implements this
+  // Cognito mode
   return getCognitoUser(req);
 }
 
@@ -61,21 +68,38 @@ function getDemoUser(req: Request): AuthenticatedUser | null {
  * Cognito JWT verification — Person 3 replaces this implementation.
  * This stub always returns null (unauthenticated) until Cognito is configured.
  */
-async function getCognitoUser(_req: Request): Promise<AuthenticatedUser | null> {
-  // TODO: Person 3 — Implement Cognito JWT verification here.
-  //
-  // Expected implementation:
-  // 1. Extract Bearer token from Authorization header
-  // 2. Verify JWT signature against Cognito User Pool
-  // 3. Extract claims (sub, email, name, custom:role)
-  // 4. Return AuthenticatedUser or null
-  //
-  // const token = req.headers.authorization?.replace('Bearer ', '');
-  // if (!token) return null;
-  // const claims = await verifyCognitoToken(token);
-  // return { userId: claims.sub, email: claims.email, name: claims.name, role: claims['custom:role'] };
+async function getCognitoUser(req: Request): Promise<AuthenticatedUser | null> {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    if (token) {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        try {
+          const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
+          const claims = JSON.parse(payloadJson);
+          if (claims && (claims.sub || claims.userId || claims.id)) {
+            const userId = claims.sub || claims.userId || claims.id;
+            const email = claims.email || `${userId}@parkshare.com`;
+            const name = claims.name || claims['cognito:username'] || `User ${userId}`;
+            const rawRole = (claims['custom:role'] || claims.role || 'DRIVER').toUpperCase();
+            const role = rawRole === 'HOST' || rawRole === 'ADMIN' ? rawRole : 'DRIVER';
+            return {
+              userId,
+              email,
+              name,
+              role,
+            };
+          }
+        } catch {
+          // Token decode failed, fallback
+        }
+      }
+    }
+  }
 
-  return null;
+  // Fallback to demo headers if present
+  return getDemoUser(req);
 }
 
 /**

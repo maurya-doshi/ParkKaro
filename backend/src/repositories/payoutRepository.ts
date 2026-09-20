@@ -38,6 +38,10 @@ export class PayoutRepository extends BaseRepository<Payout> {
       }
     );
   }
+
+  async listAll(limit = 100): Promise<Payout[]> {
+    return this.scanItems({ Limit: limit });
+  }
 }
 
 export const payoutRepository = new PayoutRepository();

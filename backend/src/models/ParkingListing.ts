@@ -6,7 +6,7 @@ export type ParkingType = 'OPEN' | 'COVERED' | 'BASEMENT' | 'GARAGE' | 'PRIVATE'
 export type VehicleTypeEnum = 'CAR' | 'BIKE' | 'SUV' | 'TRUCK' | 'EV';
 export type AmenityType = 'covered' | 'cctv' | 'security' | 'lighting' | 'evCharging' | 'accessible' | '24x7';
 export type CancellationPolicy = 'FLEXIBLE' | 'MODERATE' | 'STRICT';
-export type ListingStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'DELETED';
+export type ListingStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'DELETED' | 'AVAILABLE';
 
 export interface DayAvailability {
   open: string; // HH:mm

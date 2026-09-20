@@ -59,7 +59,23 @@ export class ParkingService {
       throw new NotFoundError('Parking listing', listingId);
     }
 
-    return listing;
+    return {
+      ...listing,
+      amenities: Array.isArray(listing.amenities)
+        ? listing.amenities
+        : (typeof listing.amenities === 'object' && listing.amenities
+            ? (Object.keys(listing.amenities) as any)
+            : []),
+      vehicleTypes: Array.isArray(listing.vehicleTypes)
+        ? listing.vehicleTypes
+        : (typeof listing.vehicleTypes === 'object' && listing.vehicleTypes
+            ? (Object.keys(listing.vehicleTypes) as any)
+            : []),
+      photos: Array.isArray(listing.photos) ? listing.photos : [],
+      rating: typeof listing.rating === 'number' ? listing.rating : 0,
+      reviewCount: typeof listing.reviewCount === 'number' ? listing.reviewCount : 0,
+      capacity: listing.capacity || (listing as any).totalSlots || (listing as any).availableSlots || 1,
+    };
   }
 
   /**
