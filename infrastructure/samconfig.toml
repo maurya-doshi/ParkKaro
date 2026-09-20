@@ -1,4 +1,4 @@
-# ParkKaro - SAM CLI Configuration
+# ParkShare - SAM CLI Configuration
 # DO NOT commit real AWS credentials or account-specific values.
 #
 # IMPORTANT: If DynamoDB tables already exist in your AWS account,
@@ -8,11 +8,11 @@
 version = 0.1
 
 [default.deploy.parameters]
-stack_name = "parkkaro"
+stack_name = "parkshare"
 region = "ap-south-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-s3_prefix = "parkkaro"
+s3_prefix = "parkshare"
 resolve_s3 = true
 fail_on_empty_changeset = false
 
@@ -25,11 +25,11 @@ port = 3001
 
 # Staging
 [staging.deploy.parameters]
-stack_name = "parkkaro-staging"
+stack_name = "parkshare-staging"
 region = "ap-south-1"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-s3_prefix = "parkkaro-staging"
+s3_prefix = "parkshare-staging"
 resolve_s3 = true
 fail_on_empty_changeset = false
 parameter_overrides = "Environment=staging"
@@ -37,11 +37,11 @@ parameter_overrides = "Environment=staging"
 # Production
 # SAFE MODE: CreateDynamoDBTables=false to preserve existing tables
 [production.deploy.parameters]
-stack_name = "parkkaro-production"
+stack_name = "parkshare-production"
 region = "ap-south-1"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-s3_prefix = "parkkaro-prod"
+s3_prefix = "parkshare-prod"
 resolve_s3 = true
 fail_on_empty_changeset = false
 parameter_overrides = "Environment=production CreateDynamoDBTables=false"
@@ -49,11 +49,11 @@ parameter_overrides = "Environment=production CreateDynamoDBTables=false"
 # Production (with table creation)
 # Use this ONLY on first deployment when tables do not exist yet
 [production-fresh.deploy.parameters]
-stack_name = "parkkaro-production"
+stack_name = "parkshare-production"
 region = "ap-south-1"
 confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-s3_prefix = "parkkaro-prod"
+s3_prefix = "parkshare-prod"
 resolve_s3 = true
 fail_on_empty_changeset = false
 parameter_overrides = "Environment=production CreateDynamoDBTables=true"

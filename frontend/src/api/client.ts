@@ -38,8 +38,8 @@ export class ApiClient {
     };
 
     // Check auth in localStorage
-    const savedUser = localStorage.getItem('parkkaro_auth_user');
-    const token = localStorage.getItem('parkkaro_auth_token');
+    const savedUser = localStorage.getItem('parkshare_auth_user');
+    const token = localStorage.getItem('parkshare_auth_token');
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -65,19 +65,19 @@ export class ApiClient {
         if (effectiveUserId === 'user_admin1') effectiveUserId = 'admin_demo_1';
 
         headers['X-Demo-User-Id'] = effectiveUserId;
-        headers['X-Demo-Email'] = user.email || `${effectiveUserId}@demo.parkkaro.com`;
+        headers['X-Demo-Email'] = user.email || `${effectiveUserId}@demo.parkshare.com`;
         headers['X-Demo-Name'] = user.name || 'Demo User';
         headers['X-Demo-Role'] = defaultRole;
       } catch (err) {
         console.warn('Failed parsing saved user', err);
         headers['X-Demo-User-Id'] = 'driver_demo_1';
-        headers['X-Demo-Email'] = 'driver1@demo.parkkaro.com';
+        headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
         headers['X-Demo-Name'] = 'Demo Driver Arjun';
         headers['X-Demo-Role'] = 'DRIVER';
       }
     } else {
       headers['X-Demo-User-Id'] = 'driver_demo_1';
-      headers['X-Demo-Email'] = 'driver1@demo.parkkaro.com';
+      headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
       headers['X-Demo-Name'] = 'Demo Driver Arjun';
       headers['X-Demo-Role'] = 'DRIVER';
     }

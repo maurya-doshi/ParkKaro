@@ -8,7 +8,7 @@ export const env = {
   // AWS
   awsRegion: process.env.AWS_REGION || process.env.AWS_REGION_NAME || 'ap-south-1',
   dynamoDbEndpoint: process.env.DYNAMODB_ENDPOINT || undefined,
-  dynamoDbTablePrefix: process.env.DYNAMODB_TABLE_PREFIX || 'parkkaro',
+  dynamoDbTablePrefix: process.env.DYNAMODB_TABLE_PREFIX || 'parkshare',
 
   // Cognito
   cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID || '',
@@ -37,7 +37,7 @@ export const env = {
 
 /**
  * Returns the DynamoDB table name with prefix.
- * e.g., tableName('parking') => 'parkkaro-parking'
+ * e.g., tableName('parking') => 'parkshare-parking'
  */
 export function tableName(entity: string): string {
   return `${env.dynamoDbTablePrefix}-${entity}`;
