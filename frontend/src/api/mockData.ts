@@ -7,8 +7,8 @@ import { User } from '../types/user';
 
 export const DEMO_USERS: Record<string, User> = {
   driver: {
-    userId: 'user_driver1',
-    email: 'driver@parkshare.demo',
+    userId: 'driver_demo_1',
+    email: 'driver1@demo.parkshare.com',
     name: 'Arjun Verma',
     phone: '+91 98765 43210',
     role: 'DRIVER',
@@ -18,8 +18,8 @@ export const DEMO_USERS: Record<string, User> = {
     updatedAt: '2026-09-18T10:00:00.000Z'
   },
   host: {
-    userId: 'user_host1',
-    email: 'host@parkshare.demo',
+    userId: 'host_demo_1',
+    email: 'host1@demo.parkshare.com',
     name: 'Priya Sharma',
     phone: '+91 98123 45678',
     role: 'HOST',
@@ -29,8 +29,8 @@ export const DEMO_USERS: Record<string, User> = {
     updatedAt: '2026-09-18T10:00:00.000Z'
   },
   admin: {
-    userId: 'user_admin1',
-    email: 'admin@parkshare.demo',
+    userId: 'admin_demo_1',
+    email: 'admin@demo.parkshare.com',
     name: 'Super Administrator',
     phone: '+91 99999 88888',
     role: 'ADMIN',

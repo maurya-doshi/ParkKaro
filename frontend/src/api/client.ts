@@ -48,21 +48,37 @@ export class ApiClient {
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
-        headers['X-Demo-User-Id'] = user.userId || 'user_driver1';
-        headers['X-Demo-Email'] = user.email || 'driver@example.com';
-        headers['X-Demo-Name'] = user.name || 'John Driver';
-        headers['X-Demo-Role'] = user.role || 'DRIVER';
+        let defaultUserId = 'driver_demo_1';
+        let defaultRole = user.role || 'DRIVER';
+        if (defaultRole === 'HOST' || user.userId === 'user_host1' || user.userId === 'host_demo_1') {
+          defaultUserId = 'host_demo_1';
+          defaultRole = 'HOST';
+        } else if (defaultRole === 'ADMIN' || user.userId === 'user_admin1' || user.userId === 'admin_demo_1') {
+          defaultUserId = 'admin_demo_1';
+          defaultRole = 'ADMIN';
+        }
+
+        // Map obsolete user_* IDs to valid demo seed IDs
+        let effectiveUserId = user.userId || defaultUserId;
+        if (effectiveUserId === 'user_driver1') effectiveUserId = 'driver_demo_1';
+        if (effectiveUserId === 'user_host1') effectiveUserId = 'host_demo_1';
+        if (effectiveUserId === 'user_admin1') effectiveUserId = 'admin_demo_1';
+
+        headers['X-Demo-User-Id'] = effectiveUserId;
+        headers['X-Demo-Email'] = user.email || `${effectiveUserId}@demo.parkshare.com`;
+        headers['X-Demo-Name'] = user.name || 'Demo User';
+        headers['X-Demo-Role'] = defaultRole;
       } catch (err) {
         console.warn('Failed parsing saved user', err);
-        headers['X-Demo-User-Id'] = 'user_driver1';
-        headers['X-Demo-Email'] = 'driver@example.com';
-        headers['X-Demo-Name'] = 'John Driver';
+        headers['X-Demo-User-Id'] = 'driver_demo_1';
+        headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
+        headers['X-Demo-Name'] = 'Demo Driver Arjun';
         headers['X-Demo-Role'] = 'DRIVER';
       }
     } else {
-      headers['X-Demo-User-Id'] = 'user_driver1';
-      headers['X-Demo-Email'] = 'driver@example.com';
-      headers['X-Demo-Name'] = 'John Driver';
+      headers['X-Demo-User-Id'] = 'driver_demo_1';
+      headers['X-Demo-Email'] = 'driver1@demo.parkshare.com';
+      headers['X-Demo-Name'] = 'Demo Driver Arjun';
       headers['X-Demo-Role'] = 'DRIVER';
     }
 

@@ -71,39 +71,56 @@ export interface DriverDashboardStats {
   upcomingBookings: Array<{
     bookingId: string;
     listingId: string;
-    listingTitle: string;
-    listingAddress: string;
+    listingTitle?: string;
+    listingAddress?: string;
     startTime: string;
     endTime: string;
-    amount: number;
+    amount?: number;
+    totalAmount?: number;
     bookingStatus: string;
-    qrVerificationCode: string;
+    qrVerificationCode?: string;
   }>;
-  pastBookings: Array<{
+  pastBookings?: Array<{
     bookingId: string;
     listingId: string;
-    listingTitle: string;
+    listingTitle?: string;
     startTime: string;
     endTime: string;
-    amount: number;
+    amount?: number;
+    totalAmount?: number;
     bookingStatus: string;
   }>;
+  recentBookings?: Array<{
+    bookingId: string;
+    listingId: string;
+    listingTitle?: string;
+    listingAddress?: string;
+    startTime: string;
+    endTime: string;
+    amount?: number;
+    totalAmount?: number;
+    bookingStatus: string;
+  }>;
+  completedBookings?: number;
+  cancelledBookings?: number;
+  totalBookings?: number;
   activeBooking: {
     bookingId: string;
     listingId: string;
-    listingTitle: string;
-    listingAddress: string;
+    listingTitle?: string;
+    listingAddress?: string;
     startTime: string;
     endTime: string;
-    amount: number;
+    amount?: number;
+    totalAmount?: number;
     bookingStatus: string;
-    qrVerificationCode: string;
-    latitude: number;
-    longitude: number;
+    qrVerificationCode?: string;
+    latitude?: number;
+    longitude?: number;
   } | null;
   favoriteCount: number;
   vehicleCount: number;
-  reviewCount: number;
+  reviewCount?: number;
   unreadNotifications: number;
 }
 

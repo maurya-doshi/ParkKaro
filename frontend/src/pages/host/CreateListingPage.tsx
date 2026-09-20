@@ -86,9 +86,14 @@ export const CreateListingPage: React.FC = () => {
 
     setSubmitting(true);
     try {
+      const finalDescription =
+        description.trim().length >= 10
+          ? description.trim()
+          : `${title.trim()} - Secure, monitored, and convenient parking bay in ${area}, Bengaluru.`;
+
       const newListing = await parkingApi.create({
         title: title.trim(),
-        description: description.trim(),
+        description: finalDescription,
         area,
         address: address.trim(),
         city: 'Bengaluru',
@@ -109,8 +114,10 @@ export const CreateListingPage: React.FC = () => {
 
       showToast('Listing published successfully! It is now live.', 'success');
       navigate('/host/listings');
-    } catch {
-      showToast('Failed to create listing', 'error');
+    } catch (err: any) {
+      console.error('Failed to create listing:', err);
+      const msg = err?.message || 'Failed to create listing';
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }

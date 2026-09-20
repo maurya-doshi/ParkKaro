@@ -143,7 +143,7 @@ export const DriverDashboardPage: React.FC = () => {
               Upcoming
             </span>
             <p className="text-2xl font-black text-slate-900 mt-1">
-              {stats.upcomingBookings.length}
+              {(stats.upcomingBookings || []).length}
             </p>
             <span className="text-[11px] text-blue-600 font-semibold mt-0.5 block">
               Guaranteed slots
@@ -154,7 +154,9 @@ export const DriverDashboardPage: React.FC = () => {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
               Completed Trips
             </span>
-            <p className="text-2xl font-black text-slate-900 mt-1">{stats.pastBookings.length}</p>
+            <p className="text-2xl font-black text-slate-900 mt-1">
+              {stats.completedBookings ?? (stats.pastBookings?.length ?? 0)}
+            </p>
             <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
               Lifetime visits
             </span>
@@ -164,7 +166,7 @@ export const DriverDashboardPage: React.FC = () => {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
               Saved Spots
             </span>
-            <p className="text-2xl font-black text-slate-900 mt-1">{stats.favoriteCount}</p>
+            <p className="text-2xl font-black text-slate-900 mt-1">{stats.favoriteCount ?? 0}</p>
             <Link
               to="/driver/favorites"
               className="text-[11px] text-blue-600 font-semibold mt-0.5 block hover:underline"
@@ -177,7 +179,7 @@ export const DriverDashboardPage: React.FC = () => {
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
               Vehicles
             </span>
-            <p className="text-2xl font-black text-slate-900 mt-1">{stats.vehicleCount}</p>
+            <p className="text-2xl font-black text-slate-900 mt-1">{stats.vehicleCount ?? 0}</p>
             <Link
               to="/driver/vehicles"
               className="text-[11px] text-blue-600 font-semibold mt-0.5 block hover:underline"
@@ -199,13 +201,13 @@ export const DriverDashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          {stats.upcomingBookings.length === 0 ? (
+          {(stats.upcomingBookings || []).length === 0 ? (
             <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
               No upcoming bookings. Reserve a space ahead of your next trip.
             </div>
           ) : (
             <div className="space-y-3">
-              {stats.upcomingBookings.map((b) => (
+              {(stats.upcomingBookings || []).map((b) => (
                 <div
                   key={b.bookingId}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-blue-200 bg-slate-50/60 transition gap-4"
@@ -215,10 +217,10 @@ export const DriverDashboardPage: React.FC = () => {
                       {b.bookingStatus}
                     </span>
                     <h4 className="text-sm font-bold text-slate-900 truncate">
-                      {b.listingTitle}
+                      {b.listingTitle || 'Bengaluru Parking Slot'}
                     </h4>
                     <p className="text-xs text-slate-500 truncate mt-0.5">
-                      {b.listingAddress}
+                      {b.listingAddress || 'Bengaluru, Karnataka'}
                     </p>
                     <div className="flex items-center gap-3 text-xs text-slate-600 mt-2">
                       <span className="flex items-center gap-1">
@@ -237,7 +239,7 @@ export const DriverDashboardPage: React.FC = () => {
                         })}
                       </span>
                       <span>•</span>
-                      <span className="font-bold text-emerald-600">₹{b.amount}</span>
+                      <span className="font-bold text-emerald-600">₹{b.totalAmount ?? b.amount ?? 0}</span>
                     </div>
                   </div>
 
@@ -260,34 +262,40 @@ export const DriverDashboardPage: React.FC = () => {
         {/* Recent Past Bookings */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
           <h3 className="font-bold text-slate-900 text-base mb-4">Past Bookings</h3>
-          <div className="divide-y divide-slate-100 text-xs">
-            {stats.pastBookings.map((b) => (
-              <div key={b.bookingId} className="py-3.5 first:pt-0 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900">{b.listingTitle}</h4>
-                  <span className="text-[11px] text-slate-400">
-                    {new Date(b.startTime).toLocaleDateString('en-IN', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}{' '}
-                    • ₹{b.amount}
-                  </span>
+          {((stats.pastBookings || stats.recentBookings || []).length === 0) ? (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-xs text-slate-500">
+              No completed trips recorded yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 text-xs">
+              {(stats.pastBookings || stats.recentBookings || []).map((b) => (
+                <div key={b.bookingId} className="py-3.5 first:pt-0 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-slate-900">{b.listingTitle || 'Parking Spot'}</h4>
+                    <span className="text-[11px] text-slate-400">
+                      {new Date(b.startTime).toLocaleDateString('en-IN', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}{' '}
+                      • ₹{b.totalAmount ?? b.amount ?? 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                      {b.bookingStatus || 'COMPLETED'}
+                    </span>
+                    <Link
+                      to={`/parking/${b.listingId}`}
+                      className="px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      Rebook
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
-                    COMPLETED
-                  </span>
-                  <Link
-                    to={`/parking/${b.listingId}`}
-                    className="px-3 py-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    Rebook
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

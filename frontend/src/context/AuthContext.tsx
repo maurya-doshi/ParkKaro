@@ -22,7 +22,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(AUTH_USER_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.userId === 'user_driver1') return DEMO_USERS.driver;
+        if (parsed.userId === 'user_host1') return DEMO_USERS.host;
+        if (parsed.userId === 'user_admin1') return DEMO_USERS.admin;
+        return parsed;
       } catch (e) {
         console.error('Failed to parse saved user', e);
       }
