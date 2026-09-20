@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# ParkShare — Full Deployment Script (Linux/macOS)
+# ParkKaro — Full Deployment Script (Linux/macOS)
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -36,11 +36,11 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 INFRA_DIR="$PROJECT_ROOT/infrastructure"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
-STACK_NAME="parkshare-${ENVIRONMENT}"
+STACK_NAME="parkkaro-${ENVIRONMENT}"
 
 echo ""
 echo "======================================================="
-echo "  ParkShare -- AWS Deployment"
+echo "  ParkKaro -- AWS Deployment"
 echo "======================================================="
 echo "  Environment:     $ENVIRONMENT"
 echo "  Stack:           $STACK_NAME"
@@ -95,7 +95,7 @@ sam deploy \
     --no-confirm-changeset \
     --no-fail-on-empty-changeset \
     --resolve-s3 \
-    --tags "Project=ParkShare Environment=$ENVIRONMENT"
+    --tags "Project=ParkKaro Environment=$ENVIRONMENT"
 echo "  [OK] SAM stack deployed"
 echo ""
 
@@ -181,7 +181,7 @@ fi
 # --- Step 8: Verify DynamoDB tables ---
 echo ""
 echo "[Step 8] Verifying DynamoDB tables..."
-aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkshare')]" --output table 2>/dev/null || echo "  [SKIP] Could not verify tables"
+aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkkaro')]" --output table 2>/dev/null || echo "  [SKIP] Could not verify tables"
 
 echo ""
 echo "======================================================="

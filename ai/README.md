@@ -1,4 +1,4 @@
-# ParkShare — AI Module (Person 4)
+# ParkKaro — AI Module (Person 4)
 
 > **Owner:** Person 4 (AI / Amazon Bedrock)  
 > **Branch:** `person4/ai`  
@@ -8,7 +8,7 @@
 
 ## Overview
 
-This folder contains the Amazon Bedrock integration for ParkShare's AI features.
+This folder contains the Amazon Bedrock integration for ParkKaro's AI features.
 
 The AI layer sits **between** the backend API and Amazon Bedrock. It:
 1. Receives requests from the backend API routes (`/ai/*`)

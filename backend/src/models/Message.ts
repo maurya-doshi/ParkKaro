@@ -1,5 +1,5 @@
 /**
- * Message model — corresponds to parkshare-messages table.
+ * Message model — corresponds to parkkaro-messages table.
  */
 
 export interface Message {

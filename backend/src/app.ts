@@ -61,7 +61,7 @@ app.use(errorHandler);
 // ─── Start Server ────────────────────────────────────────────
 if (require.main === module) {
   app.listen(env.port, () => {
-    console.log(`🅿️  ParkShare Backend running on port ${env.port}`);
+    console.log(`🅿️  ParkKaro Backend running on port ${env.port}`);
     console.log(`   Environment: ${env.nodeEnv}`);
     console.log(`   Auth mode: ${env.authMode}`);
     console.log(`   DynamoDB: ${env.dynamoDbEndpoint || 'AWS (production)'}`);

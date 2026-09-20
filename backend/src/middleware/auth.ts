@@ -58,7 +58,7 @@ function getDemoUser(req: Request): AuthenticatedUser | null {
 
   return {
     userId,
-    email: (req.headers['x-demo-email'] as string) || `${userId}@demo.parkshare.com`,
+    email: (req.headers['x-demo-email'] as string) || `${userId}@demo.parkkaro.com`,
     name: (req.headers['x-demo-name'] as string) || `Demo User ${userId}`,
     role: role.toUpperCase() as 'DRIVER' | 'HOST' | 'ADMIN',
   };
@@ -80,7 +80,7 @@ async function getCognitoUser(req: Request): Promise<AuthenticatedUser | null> {
           const claims = JSON.parse(payloadJson);
           if (claims && (claims.sub || claims.userId || claims.id)) {
             const userId = claims.sub || claims.userId || claims.id;
-            const email = claims.email || `${userId}@parkshare.com`;
+            const email = claims.email || `${userId}@parkkaro.com`;
             const name = claims.name || claims['cognito:username'] || `User ${userId}`;
             const rawRole = (claims['custom:role'] || claims.role || 'DRIVER').toUpperCase();
             const role = rawRole === 'HOST' || rawRole === 'ADMIN' ? rawRole : 'DRIVER';

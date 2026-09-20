@@ -49,7 +49,7 @@ export interface SeedResult {
  * Deterministic seed script for local development and AWS staging.
  */
 export async function seedDatabase(): Promise<SeedResult> {
-  console.log('🌱 Starting ParkShare deterministic database seed...');
+  console.log('🌱 Starting ParkKaro deterministic database seed...');
 
   // 1. Users
   console.log(`👤 Seeding ${demoUsers.length} demo users...`);
@@ -158,7 +158,7 @@ export async function seedDatabase(): Promise<SeedResult> {
     await reportRepository.create(report);
   }
 
-  console.log('✅ ParkShare database seed complete!');
+  console.log('✅ ParkKaro database seed complete!');
 
   return {
     users: demoUsers.length,

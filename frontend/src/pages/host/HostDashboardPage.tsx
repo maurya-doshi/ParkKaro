@@ -202,7 +202,7 @@ export const HostDashboardPage: React.FC = () => {
             <ShieldCheck className="w-6 h-6 text-indigo-600 mb-2 group-hover:scale-110 transition-transform" />
             <h4 className="font-bold text-slate-900 text-sm">Guest Support & Claims</h4>
             <p className="text-xs text-slate-500 mt-1">
-              Direct communication with guests and 24/7 ParkShare assistance.
+              Direct communication with guests and 24/7 ParkKaro assistance.
             </p>
           </Link>
         </div>

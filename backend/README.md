@@ -1,4 +1,4 @@
-# ParkShare Backend
+# ParkKaro Backend
 
 > **Airbnb for Parking** — Complete marketplace backend with Express.js, TypeScript, and Amazon DynamoDB.
 
@@ -70,13 +70,13 @@ Creates deterministic demo parking listings across Bengaluru, 12 demo users (3 d
 
 | Role | User ID | Name | Email |
 |------|---------|------|-------|
-| `DRIVER` | `driver_demo_1` | Demo Driver Arjun | driver1@demo.parkshare.com |
-| `DRIVER` | `driver_demo_2` | Demo Driver Priya | driver2@demo.parkshare.com |
-| `DRIVER` | `driver_demo_3` | Demo Driver Rahul | driver3@demo.parkshare.com |
-| `HOST` | `host_demo_1` | Demo Host Vikram | host1@demo.parkshare.com |
-| `HOST` | `host_demo_2` | Demo Host Ananya | host2@demo.parkshare.com |
-| `HOST` | `host_demo_3` | Demo Host Rajesh | host3@demo.parkshare.com |
-| `ADMIN` | `admin_demo_1` | Demo Admin Pooja | admin@demo.parkshare.com |
+| `DRIVER` | `driver_demo_1` | Demo Driver Arjun | driver1@demo.parkkaro.com |
+| `DRIVER` | `driver_demo_2` | Demo Driver Priya | driver2@demo.parkkaro.com |
+| `DRIVER` | `driver_demo_3` | Demo Driver Rahul | driver3@demo.parkkaro.com |
+| `HOST` | `host_demo_1` | Demo Host Vikram | host1@demo.parkkaro.com |
+| `HOST` | `host_demo_2` | Demo Host Ananya | host2@demo.parkkaro.com |
+| `HOST` | `host_demo_3` | Demo Host Rajesh | host3@demo.parkkaro.com |
+| `ADMIN` | `admin_demo_1` | Demo Admin Pooja | admin@demo.parkkaro.com |
 
 ## API Documentation
 
@@ -136,7 +136,7 @@ backend/
 | Variable | Description |
 |----------|-------------|
 | `AWS_REGION` | AWS region |
-| `DYNAMODB_TABLE_PREFIX` | Table name prefix (default: `parkshare`) |
+| `DYNAMODB_TABLE_PREFIX` | Table name prefix (default: `parkkaro`) |
 | `DYNAMODB_ENDPOINT` | DynamoDB endpoint (for local dev) |
 | `COGNITO_USER_POOL_ID` | Cognito user pool ID |
 | `COGNITO_CLIENT_ID` | Cognito client ID |

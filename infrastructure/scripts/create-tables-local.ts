@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ParkShare — DynamoDB Table Setup Script
+ * ParkKaro — DynamoDB Table Setup Script
  *
  * Creates all 14 DynamoDB tables with correct key schemas and GSIs
  * for local development using DynamoDB Local.
@@ -29,7 +29,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 
 const ENDPOINT = process.env.DYNAMODB_ENDPOINT || 'http://localhost:8000';
-const PREFIX = process.env.DYNAMODB_TABLE_PREFIX || 'parkshare';
+const PREFIX = process.env.DYNAMODB_TABLE_PREFIX || 'parkkaro';
 const REGION = process.env.AWS_REGION || 'ap-south-1';
 
 const client = new DynamoDBClient({
@@ -431,7 +431,7 @@ const tables: TableDef[] = [
 // ─── Create Tables ───────────────────────────────────────────
 
 async function main(): Promise<void> {
-  console.log(`\n🗄️  ParkShare — Creating DynamoDB tables (local)`);
+  console.log(`\n🗄️  ParkKaro — Creating DynamoDB tables (local)`);
   console.log(`   Endpoint: ${ENDPOINT}`);
   console.log(`   Prefix:   ${PREFIX}\n`);
 

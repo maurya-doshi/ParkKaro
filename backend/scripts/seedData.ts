@@ -17,7 +17,7 @@ export const demoUsers: User[] = [
   // Drivers
   {
     userId: 'driver_demo_1',
-    email: 'driver1@demo.parkshare.com',
+    email: 'driver1@demo.parkkaro.com',
     name: 'Demo Driver Arjun',
     phone: '+919876543210',
     role: 'DRIVER',
@@ -27,7 +27,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'driver_demo_2',
-    email: 'driver2@demo.parkshare.com',
+    email: 'driver2@demo.parkkaro.com',
     name: 'Demo Driver Priya',
     phone: '+919876543211',
     role: 'DRIVER',
@@ -37,7 +37,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'driver_demo_3',
-    email: 'driver3@demo.parkshare.com',
+    email: 'driver3@demo.parkkaro.com',
     name: 'Demo Driver Rahul',
     phone: '+919876543212',
     role: 'DRIVER',
@@ -49,7 +49,7 @@ export const demoUsers: User[] = [
   // Hosts
   {
     userId: 'host_demo_1',
-    email: 'host1@demo.parkshare.com',
+    email: 'host1@demo.parkkaro.com',
     name: 'Demo Host Vikram',
     phone: '+919876543220',
     role: 'HOST',
@@ -59,7 +59,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_2',
-    email: 'host2@demo.parkshare.com',
+    email: 'host2@demo.parkkaro.com',
     name: 'Demo Host Ananya',
     phone: '+919876543221',
     role: 'HOST',
@@ -69,7 +69,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_3',
-    email: 'host3@demo.parkshare.com',
+    email: 'host3@demo.parkkaro.com',
     name: 'Demo Host Rajesh',
     phone: '+919876543222',
     role: 'HOST',
@@ -79,7 +79,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_4',
-    email: 'host4@demo.parkshare.com',
+    email: 'host4@demo.parkkaro.com',
     name: 'Demo Host Sunita',
     phone: '+919876543223',
     role: 'HOST',
@@ -89,7 +89,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_5',
-    email: 'host5@demo.parkshare.com',
+    email: 'host5@demo.parkkaro.com',
     name: 'Demo Host Karthik',
     phone: '+919876543224',
     role: 'HOST',
@@ -99,7 +99,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_6',
-    email: 'host6@demo.parkshare.com',
+    email: 'host6@demo.parkkaro.com',
     name: 'Demo Host Meera',
     phone: '+919876543225',
     role: 'HOST',
@@ -109,7 +109,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_7',
-    email: 'host7@demo.parkshare.com',
+    email: 'host7@demo.parkkaro.com',
     name: 'Demo Host Suresh',
     phone: '+919876543226',
     role: 'HOST',
@@ -119,7 +119,7 @@ export const demoUsers: User[] = [
   },
   {
     userId: 'host_demo_8',
-    email: 'host8@demo.parkshare.com',
+    email: 'host8@demo.parkkaro.com',
     name: 'Demo Host Deepa',
     phone: '+919876543227',
     role: 'HOST',
@@ -131,7 +131,7 @@ export const demoUsers: User[] = [
   // Admin
   {
     userId: 'admin_demo_1',
-    email: 'admin@demo.parkshare.com',
+    email: 'admin@demo.parkkaro.com',
     name: 'Demo Admin Pooja',
     phone: '+919876543200',
     role: 'ADMIN',

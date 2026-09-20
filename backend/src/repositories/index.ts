@@ -1,5 +1,5 @@
 /**
- * ParkShare Repositories — DynamoDB Data Access Layer.
+ * ParkKaro Repositories — DynamoDB Data Access Layer.
  */
 
 export * from './baseRepository';

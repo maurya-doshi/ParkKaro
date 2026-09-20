@@ -1,5 +1,5 @@
 /**
- * Conversation model — corresponds to parkshare-conversations table.
+ * Conversation model — corresponds to parkkaro-conversations table.
  */
 
 export interface Conversation {

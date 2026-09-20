@@ -216,7 +216,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Why ParkShare & How It Works */}
+      {/* Why ParkKaro & How It Works */}
       <section className="py-16 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
@@ -224,7 +224,7 @@ export const LandingPage: React.FC = () => {
               Smart Parking Technology
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-              Why Drivers Choose ParkShare
+              Why Drivers Choose ParkKaro
             </h2>
             <p className="text-sm text-slate-500 mt-2">
               Designed specifically to solve urban congestion in Indian metropolitan hubs.
@@ -249,7 +249,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h3 className="font-bold text-slate-900 text-lg mb-2">Instant QR Entry</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                No tickets, cash, or gate friction. Just flash your cryptographic ParkShare QR code
+                No tickets, cash, or gate friction. Just flash your cryptographic ParkKaro QR code
                 at the security boom barrier or gatekeeper for immediate access.
               </p>
             </div>

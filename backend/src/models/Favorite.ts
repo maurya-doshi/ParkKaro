@@ -1,5 +1,5 @@
 /**
- * Favorite model — corresponds to parkshare-favorites table.
+ * Favorite model — corresponds to parkkaro-favorites table.
  */
 
 export interface Favorite {

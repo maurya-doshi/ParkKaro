@@ -1,5 +1,5 @@
 /**
- * Payment model — corresponds to parkshare-payments table.
+ * Payment model — corresponds to parkkaro-payments table.
  */
 
 export type PaymentProviderStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'REFUNDED';

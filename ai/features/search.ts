@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Feature: Natural Language Search (Hardened)
+ * ParkKaro AI — Feature: Natural Language Search (Hardened)
  *
  * POST /ai/search
  *

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * ParkShare — Cognito User Management Script
+ * ParkKaro — Cognito User Management Script
  *
  * Utility for managing Cognito users from the command line.
  * Used during development, seeding, and admin operations.
  *
  * Usage:
- *   npx ts-node scripts/cognito-setup.ts create-admin --email admin@parkshare.com --name "Admin" --password "Admin@123"
+ *   npx ts-node scripts/cognito-setup.ts create-admin --email admin@parkkaro.com --name "Admin" --password "Admin@123"
  *   npx ts-node scripts/cognito-setup.ts create-user  --email driver@test.com --name "Test Driver" --role DRIVER --password "Test@123"
  *   npx ts-node scripts/cognito-setup.ts list-users
  *
@@ -156,11 +156,11 @@ async function seedDemoUsers(): Promise<void> {
   console.log('\n🌱 Seeding demo users...\n');
 
   const demoUsers: CreateUserOptions[] = [
-    { email: 'admin@parkshare.com', name: 'ParkShare Admin', role: 'ADMIN', password: 'Admin@2026!' },
-    { email: 'host1@parkshare.com', name: 'Rahul Kumar', role: 'HOST', password: 'Host@2026!' },
-    { email: 'host2@parkshare.com', name: 'Priya Sharma', role: 'HOST', password: 'Host@2026!' },
-    { email: 'driver1@parkshare.com', name: 'Amit Singh', role: 'DRIVER', password: 'Driver@2026!' },
-    { email: 'driver2@parkshare.com', name: 'Sneha Patel', role: 'DRIVER', password: 'Driver@2026!' },
+    { email: 'admin@parkkaro.com', name: 'ParkKaro Admin', role: 'ADMIN', password: 'Admin@2026!' },
+    { email: 'host1@parkkaro.com', name: 'Rahul Kumar', role: 'HOST', password: 'Host@2026!' },
+    { email: 'host2@parkkaro.com', name: 'Priya Sharma', role: 'HOST', password: 'Host@2026!' },
+    { email: 'driver1@parkkaro.com', name: 'Amit Singh', role: 'DRIVER', password: 'Driver@2026!' },
+    { email: 'driver2@parkkaro.com', name: 'Sneha Patel', role: 'DRIVER', password: 'Driver@2026!' },
   ];
 
   for (const user of demoUsers) {
@@ -189,8 +189,8 @@ async function main(): Promise<void> {
     case 'create-admin': {
       const args = parseArgs();
       await createUser({
-        email: args.email || 'admin@parkshare.com',
-        name: args.name || 'ParkShare Admin',
+        email: args.email || 'admin@parkkaro.com',
+        name: args.name || 'ParkKaro Admin',
         role: 'ADMIN',
         password: args.password || 'Admin@2026!',
       });
@@ -207,7 +207,7 @@ async function main(): Promise<void> {
         email: args.email,
         name: args.name || args.email.split('@')[0],
         role: args.role as 'DRIVER' | 'HOST' | 'ADMIN',
-        password: args.password || 'ParkShare@2026!',
+        password: args.password || 'ParkKaro@2026!',
       });
       break;
     }
@@ -222,7 +222,7 @@ async function main(): Promise<void> {
 
     default:
       console.log(`
-ParkShare Cognito User Management
+ParkKaro Cognito User Management
 
 Commands:
   create-admin   Create an admin user
@@ -237,7 +237,7 @@ Options:
   --password   User password
 
 Examples:
-  npx ts-node scripts/cognito-setup.ts create-admin --email admin@parkshare.com --password "Admin@2026!"
+  npx ts-node scripts/cognito-setup.ts create-admin --email admin@parkkaro.com --password "Admin@2026!"
   npx ts-node scripts/cognito-setup.ts create-user --email driver@test.com --role DRIVER --name "Test" --password "Test@2026!"
   npx ts-node scripts/cognito-setup.ts seed-demo
   npx ts-node scripts/cognito-setup.ts list-users

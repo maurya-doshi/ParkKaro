@@ -46,7 +46,7 @@ export const BecomeHostPage: React.FC = () => {
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             Host your driveway or commercial bay on{' '}
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              ParkShare
+              ParkKaro
             </span>
           </h1>
 

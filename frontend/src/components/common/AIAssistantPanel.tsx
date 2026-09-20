@@ -40,7 +40,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ open, onClos
     {
       id: 'welcome',
       role: 'assistant',
-      text: "Hi! I'm ParkShare AI, powered by Amazon Bedrock. Ask me anything about parking in Bengaluru — locations, pricing, EV chargers, or specific neighbourhoods.",
+      text: "Hi! I'm ParkKaro AI, powered by Amazon Bedrock. Ask me anything about parking in Bengaluru — locations, pricing, EV chargers, or specific neighbourhoods.",
       timestamp: new Date()
     }
   ]);
@@ -119,7 +119,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ open, onClos
             <Sparkles className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold text-sm">ParkShare AI Assistant</h2>
+            <h2 className="font-bold text-sm">ParkKaro AI Assistant</h2>
             <p className="text-[11px] text-blue-100">Powered by Amazon Bedrock</p>
           </div>
           <button

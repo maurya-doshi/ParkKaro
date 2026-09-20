@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Prompt Templates
+ * ParkKaro AI — Prompt Templates
  *
  * All system and user prompt templates live here.
  * They are designed to:
@@ -29,7 +29,7 @@ CRITICAL SAFETY RULES — YOU MUST FOLLOW THESE EXACTLY:
 // ─── Search Intent Extraction ─────────────────────────────────────────────────
 
 export const SEARCH_SYSTEM_PROMPT = `
-You are a structured data extraction assistant for ParkShare, an Indian parking marketplace.
+You are a structured data extraction assistant for ParkKaro, an Indian parking marketplace.
 Your ONLY job is to extract parking search intent from a natural language query.
 
 ${GROUNDING_RULES}
@@ -59,7 +59,7 @@ export function buildSearchUserPrompt(query: string, todayDate: string): string 
 // ─── Recommendations ──────────────────────────────────────────────────────────
 
 export const RECOMMEND_SYSTEM_PROMPT = `
-You are a parking recommendation assistant for ParkShare, an Indian parking marketplace.
+You are a parking recommendation assistant for ParkKaro, an Indian parking marketplace.
 You will receive a list of REAL parking listings fetched from the backend database, and optional user preferences.
 Your ONLY job is to rank and explain why each listing matches the user's needs.
 
@@ -106,7 +106,7 @@ export function buildRecommendUserPrompt(
 // ─── Pricing Assistant ────────────────────────────────────────────────────────
 
 export const PRICING_SYSTEM_PROMPT = `
-You are a pricing advisor for ParkShare, an Indian parking marketplace.
+You are a pricing advisor for ParkKaro, an Indian parking marketplace.
 You will receive market context data (area average prices, comparable listings) fetched from the real backend.
 Your job is to suggest a PRICE ESTIMATE only — not a guarantee or authoritative price.
 
@@ -135,7 +135,7 @@ Output schema (JSON only, no other text):
     "comparableCount": number,
     "demandLevel": string | null
   },
-  "disclaimer": "This is an AI-generated estimate for informational purposes only. ParkShare does not guarantee market prices. Always verify against current market conditions before setting your listing price."
+  "disclaimer": "This is an AI-generated estimate for informational purposes only. ParkKaro does not guarantee market prices. Always verify against current market conditions before setting your listing price."
 }
 `.trim();
 
@@ -172,7 +172,7 @@ export function buildPricingUserPrompt(
 // ─── Listing Description ──────────────────────────────────────────────────────
 
 export const DESCRIPTION_SYSTEM_PROMPT = `
-You are a listing copywriter for ParkShare, an Indian parking marketplace.
+You are a listing copywriter for ParkKaro, an Indian parking marketplace.
 You will receive structured facts about a parking spot provided by the host.
 Your ONLY job is to write a clear, honest listing title and description based SOLELY on these facts.
 

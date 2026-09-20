@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ParkShare — S3 Presigned URL Generator
+ * ParkKaro — S3 Presigned URL Generator
  *
  * Generates presigned URLs for secure image upload/download.
  * Used by the backend to authorize image uploads without
@@ -77,7 +77,7 @@ async function main(): Promise<void> {
 
   if (!key) {
     console.log(`
-ParkShare S3 Presigned URL Generator
+ParkKaro S3 Presigned URL Generator
 
 Usage:
   npx ts-node scripts/s3-presign.ts upload --key "listings/abc123/photo1.jpg"

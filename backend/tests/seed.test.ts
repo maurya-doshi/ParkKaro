@@ -81,7 +81,7 @@ describe('COMMIT 11 — Seed Data & System', () => {
 
       // All emails must be demo domains
       for (const u of demoUsers) {
-        expect(u.email).toMatch(/demo\.parkshare\.com/);
+        expect(u.email).toMatch(/demo\.parkkaro\.com/);
         expect(u.userId).toBeDefined();
         expect(u.status).toBe('ACTIVE');
       }

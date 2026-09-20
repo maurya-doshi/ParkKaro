@@ -1,5 +1,5 @@
 /**
- * ParkingListing model — corresponds to parkshare-parking table.
+ * ParkingListing model — corresponds to parkkaro-parking table.
  */
 
 export type ParkingType = 'OPEN' | 'COVERED' | 'BASEMENT' | 'GARAGE' | 'PRIVATE' | 'COMMERCIAL';

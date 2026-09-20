@@ -1,5 +1,5 @@
 /**
- * Report model — corresponds to parkshare-reports table.
+ * Report model — corresponds to parkkaro-reports table.
  */
 
 export type ReportTargetType = 'LISTING' | 'USER' | 'BOOKING' | 'MESSAGE';

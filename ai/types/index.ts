@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Shared TypeScript Types
+ * ParkKaro AI — Shared TypeScript Types
  *
  * These types represent the structures used by all AI features.
  * They are strictly grounded in the backend's API contract.

@@ -1,5 +1,5 @@
 /**
- * User model — corresponds to parkshare-users table.
+ * User model — corresponds to parkkaro-users table.
  * Identity/authentication is managed by Cognito.
  * This model stores profile and role information.
  */

@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  ParkShare — AWS-powered parking marketplace.
+  ParkKaro — AWS-powered parking marketplace.
   Complete serverless infrastructure: API Gateway, Lambda, DynamoDB, Cognito, S3, Bedrock IAM, CloudWatch.
   DynamoDB tables use DeletionPolicy:Retain and UpdateReplacePolicy:Retain to protect existing data.
 
@@ -17,7 +17,7 @@ Parameters:
 
   DynamoDBTablePrefix:
     Type: String
-    Default: parkshare
+    Default: parkkaro
     Description: Prefix for all DynamoDB table names (must match backend DYNAMODB_TABLE_PREFIX)
 
   CreateDynamoDBTables:
@@ -43,7 +43,7 @@ Parameters:
   FrontendDomain:
     Type: String
     Default: '*'
-    Description: Frontend domain for CORS (e.g., https://parkshare.example.com)
+    Description: Frontend domain for CORS (e.g., https://parkkaro.example.com)
 
 # ═══════════════════════════════════════════════════════════════
 # CONDITIONS
@@ -67,7 +67,7 @@ Globals:
         NODE_ENV: !Ref Environment
         DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
     Tags:
-      Project: ParkShare
+      Project: ParkKaro
       Environment: !Ref Environment
 
   Api:
@@ -87,7 +87,7 @@ Resources:
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub parkshare-users-${Environment}
+      UserPoolName: !Sub parkkaro-users-${Environment}
       AutoVerifiedAttributes:
         - email
       UsernameAttributes:
@@ -123,13 +123,13 @@ Resources:
           - Name: verified_email
             Priority: 1
       UserPoolTags:
-        Project: ParkShare
+        Project: ParkKaro
         Environment: !Ref Environment
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: !Sub parkshare-web-${Environment}
+      ClientName: !Sub parkkaro-web-${Environment}
       UserPoolId: !Ref CognitoUserPool
       GenerateSecret: false
       ExplicitAuthFlows:
@@ -184,12 +184,12 @@ Resources:
   # ─────────────────────────────────────────────────────────────
   # S3 — Image Storage (private, presigned URL access)
   # ─────────────────────────────────────────────────────────────
-  ParkShareImagesBucket:
+  ParkKaroImagesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub parkshare-images-${Environment}-${AWS::AccountId}
+      BucketName: !Sub parkkaro-images-${Environment}-${AWS::AccountId}
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
@@ -214,7 +214,7 @@ Resources:
         Status: Enabled
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
         - Key: Environment
           Value: !Ref Environment
 
@@ -267,7 +267,7 @@ Resources:
         PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 2. ParkingListings Table
   ParkingTable:
@@ -333,7 +333,7 @@ Resources:
         PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 3. Bookings Table
   BookingsTable:
@@ -399,7 +399,7 @@ Resources:
         PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 4. SlotLocks Table (Double-booking prevention)
   SlotLocksTable:
@@ -422,7 +422,7 @@ Resources:
           KeyType: RANGE
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 5. Vehicles Table
   VehiclesTable:
@@ -454,7 +454,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 6. Reviews Table
   ReviewsTable:
@@ -504,7 +504,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 7. Favorites Table
   FavoritesTable:
@@ -527,7 +527,7 @@ Resources:
           KeyType: RANGE
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 8. Payments Table
   PaymentsTable:
@@ -567,7 +567,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 9. Payouts Table
   PayoutsTable:
@@ -599,7 +599,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 10. Notifications Table
   NotificationsTable:
@@ -622,7 +622,7 @@ Resources:
           KeyType: RANGE
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 11. Conversations Table
   ConversationsTable:
@@ -664,7 +664,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 12. Messages Table
   MessagesTable:
@@ -687,7 +687,7 @@ Resources:
           KeyType: RANGE
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 13. Disputes Table
   DisputesTable:
@@ -737,7 +737,7 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # 14. Reports Table
   ReportsTable:
@@ -779,15 +779,15 @@ Resources:
             ProjectionType: ALL
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # ─────────────────────────────────────────────────────────────
   # API GATEWAY + LAMBDA — Backend API
   # ─────────────────────────────────────────────────────────────
-  ParkShareApi:
+  ParkKaroApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub parkshare-api-${Environment}
+      Name: !Sub parkkaro-api-${Environment}
       StageName: !Ref Environment
       TracingEnabled: true
       AccessLogSetting:
@@ -806,15 +806,15 @@ Resources:
           ThrottlingBurstLimit: 100
           ThrottlingRateLimit: 50
       Tags:
-        Project: ParkShare
+        Project: ParkKaro
         Environment: !Ref Environment
 
   # Single Lambda function handling all routes (Express.js backend)
-  ParkShareBackendFunction:
+  ParkKaroBackendFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub parkshare-backend-${Environment}
-      Description: ParkShare Express.js backend API handler
+      FunctionName: !Sub parkkaro-backend-${Environment}
+      Description: ParkKaro Express.js backend API handler
       CodeUri: ../backend/
       Handler: dist/lambda.handler
       Runtime: nodejs18.x
@@ -825,13 +825,13 @@ Resources:
         ProxyRoot:
           Type: Api
           Properties:
-            RestApiId: !Ref ParkShareApi
+            RestApiId: !Ref ParkKaroApi
             Path: /
             Method: ANY
         ProxyAll:
           Type: Api
           Properties:
-            RestApiId: !Ref ParkShareApi
+            RestApiId: !Ref ParkKaroApi
             Path: /{proxy+}
             Method: ANY
       Environment:
@@ -841,7 +841,7 @@ Resources:
           DYNAMODB_TABLE_PREFIX: !Ref DynamoDBTablePrefix
           COGNITO_USER_POOL_ID: !Ref CognitoUserPool
           COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
-          S3_BUCKET_NAME: !Ref ParkShareImagesBucket
+          S3_BUCKET_NAME: !Ref ParkKaroImagesBucket
           AUTH_MODE: cognito
           PLATFORM_COMMISSION_PERCENT: !Ref PlatformCommissionPercent
           TAX_PERCENT: !Ref TaxPercent
@@ -872,11 +872,11 @@ Resources:
                 - s3:PutObject
                 - s3:GetObject
                 - s3:DeleteObject
-              Resource: !Sub ${ParkShareImagesBucket.Arn}/*
+              Resource: !Sub ${ParkKaroImagesBucket.Arn}/*
             - Effect: Allow
               Action:
                 - s3:ListBucket
-              Resource: !GetAtt ParkShareImagesBucket.Arn
+              Resource: !GetAtt ParkKaroImagesBucket.Arn
         # Cognito — user management from backend
         - Version: '2012-10-17'
           Statement:
@@ -909,7 +909,7 @@ Resources:
                 - logs:PutLogEvents
               Resource: '*'
       Tags:
-        Project: ParkShare
+        Project: ParkKaro
         Environment: !Ref Environment
 
   # ─────────────────────────────────────────────────────────────
@@ -918,32 +918,32 @@ Resources:
   ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/parkshare-api-${Environment}
+      LogGroupName: !Sub /aws/apigateway/parkkaro-api-${Environment}
       RetentionInDays: 30
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   LambdaLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/parkshare-backend-${Environment}
+      LogGroupName: !Sub /aws/lambda/parkkaro-backend-${Environment}
       RetentionInDays: 30
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
 
   # Lambda Error Alarm
   LambdaErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub parkshare-lambda-errors-${Environment}
+      AlarmName: !Sub parkkaro-lambda-errors-${Environment}
       AlarmDescription: Alarm when Lambda function errors exceed threshold
       Namespace: AWS/Lambda
       MetricName: Errors
       Dimensions:
         - Name: FunctionName
-          Value: !Ref ParkShareBackendFunction
+          Value: !Ref ParkKaroBackendFunction
       Statistic: Sum
       Period: 300
       EvaluationPeriods: 1
@@ -955,13 +955,13 @@ Resources:
   Api5xxAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub parkshare-api-5xx-${Environment}
+      AlarmName: !Sub parkkaro-api-5xx-${Environment}
       AlarmDescription: Alarm when API 5XX errors exceed threshold
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub parkshare-api-${Environment}
+          Value: !Sub parkkaro-api-${Environment}
       Statistic: Sum
       Period: 300
       EvaluationPeriods: 1
@@ -973,13 +973,13 @@ Resources:
   LambdaDurationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub parkshare-lambda-duration-${Environment}
+      AlarmName: !Sub parkkaro-lambda-duration-${Environment}
       AlarmDescription: Alarm when Lambda p99 latency exceeds threshold
       Namespace: AWS/Lambda
       MetricName: Duration
       Dimensions:
         - Name: FunctionName
-          Value: !Ref ParkShareBackendFunction
+          Value: !Ref ParkKaroBackendFunction
       ExtendedStatistic: p99
       Period: 300
       EvaluationPeriods: 3
@@ -988,10 +988,10 @@ Resources:
       TreatMissingData: notBreaching
 
   # CloudWatch Dashboard
-  ParkShareDashboard:
+  ParkKaroDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
-      DashboardName: !Sub ParkShare-${Environment}
+      DashboardName: !Sub ParkKaro-${Environment}
       DashboardBody: !Sub |
         {
           "widgets": [
@@ -1000,9 +1000,9 @@ Resources:
               "properties": {
                 "title": "Lambda Invocations & Errors",
                 "metrics": [
-                  ["AWS/Lambda", "Invocations", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300}],
-                  ["AWS/Lambda", "Errors", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#d62728"}],
-                  ["AWS/Lambda", "Throttles", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${ParkKaroBackendFunction}", {"stat": "Sum", "period": 300}],
+                  ["AWS/Lambda", "Errors", "FunctionName", "${ParkKaroBackendFunction}", {"stat": "Sum", "period": 300, "color": "#d62728"}],
+                  ["AWS/Lambda", "Throttles", "FunctionName", "${ParkKaroBackendFunction}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}]
                 ],
                 "region": "${AWS::Region}", "view": "timeSeries"
               }
@@ -1012,8 +1012,8 @@ Resources:
               "properties": {
                 "title": "Lambda Duration (ms)",
                 "metrics": [
-                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "Average", "period": 300}],
-                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkShareBackendFunction}", {"stat": "p99", "period": 300, "color": "#d62728"}]
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkKaroBackendFunction}", {"stat": "Average", "period": 300}],
+                  ["AWS/Lambda", "Duration", "FunctionName", "${ParkKaroBackendFunction}", {"stat": "p99", "period": 300, "color": "#d62728"}]
                 ],
                 "region": "${AWS::Region}", "view": "timeSeries"
               }
@@ -1023,9 +1023,9 @@ Resources:
               "properties": {
                 "title": "API Gateway Requests",
                 "metrics": [
-                  ["AWS/ApiGateway", "Count", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300}],
-                  ["AWS/ApiGateway", "4XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}],
-                  ["AWS/ApiGateway", "5XXError", "ApiName", "parkshare-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#d62728"}]
+                  ["AWS/ApiGateway", "Count", "ApiName", "parkkaro-api-${Environment}", {"stat": "Sum", "period": 300}],
+                  ["AWS/ApiGateway", "4XXError", "ApiName", "parkkaro-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#ff7f0e"}],
+                  ["AWS/ApiGateway", "5XXError", "ApiName", "parkkaro-api-${Environment}", {"stat": "Sum", "period": 300, "color": "#d62728"}]
                 ],
                 "region": "${AWS::Region}", "view": "timeSeries"
               }
@@ -1035,8 +1035,8 @@ Resources:
               "properties": {
                 "title": "API Gateway Latency (ms)",
                 "metrics": [
-                  ["AWS/ApiGateway", "Latency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300}],
-                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "parkshare-api-${Environment}", {"stat": "Average", "period": 300, "color": "#2ca02c"}]
+                  ["AWS/ApiGateway", "Latency", "ApiName", "parkkaro-api-${Environment}", {"stat": "Average", "period": 300}],
+                  ["AWS/ApiGateway", "IntegrationLatency", "ApiName", "parkkaro-api-${Environment}", {"stat": "Average", "period": 300, "color": "#2ca02c"}]
                 ],
                 "region": "${AWS::Region}", "view": "timeSeries"
               }
@@ -1065,7 +1065,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub parkshare-frontend-${Environment}-${AWS::AccountId}
+      BucketName: !Sub parkkaro-frontend-${Environment}-${AWS::AccountId}
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: index.html
@@ -1076,7 +1076,7 @@ Resources:
         RestrictPublicBuckets: false
       Tags:
         - Key: Project
-          Value: ParkShare
+          Value: ParkKaro
         - Key: Environment
           Value: !Ref Environment
 
@@ -1100,29 +1100,29 @@ Outputs:
   # API
   ApiEndpoint:
     Description: API Gateway endpoint URL
-    Value: !Sub https://${ParkShareApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Value: !Sub https://${ParkKaroApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
     Export:
-      Name: !Sub parkshare-api-endpoint-${Environment}
+      Name: !Sub parkkaro-api-endpoint-${Environment}
 
   ApiId:
     Description: API Gateway ID
-    Value: !Ref ParkShareApi
+    Value: !Ref ParkKaroApi
 
   # Lambda
   BackendFunctionArn:
     Description: Backend Lambda function ARN
-    Value: !GetAtt ParkShareBackendFunction.Arn
+    Value: !GetAtt ParkKaroBackendFunction.Arn
 
   BackendFunctionName:
     Description: Backend Lambda function name
-    Value: !Ref ParkShareBackendFunction
+    Value: !Ref ParkKaroBackendFunction
 
   # Cognito
   CognitoUserPoolId:
     Description: Cognito User Pool ID
     Value: !Ref CognitoUserPool
     Export:
-      Name: !Sub parkshare-cognito-pool-id-${Environment}
+      Name: !Sub parkkaro-cognito-pool-id-${Environment}
 
   CognitoUserPoolArn:
     Description: Cognito User Pool ARN
@@ -1132,14 +1132,14 @@ Outputs:
     Description: Cognito User Pool Client ID
     Value: !Ref CognitoUserPoolClient
     Export:
-      Name: !Sub parkshare-cognito-client-id-${Environment}
+      Name: !Sub parkkaro-cognito-client-id-${Environment}
 
   # S3
   ImagesBucketName:
     Description: S3 bucket for parking listing images
-    Value: !Ref ParkShareImagesBucket
+    Value: !Ref ParkKaroImagesBucket
     Export:
-      Name: !Sub parkshare-images-bucket-${Environment}
+      Name: !Sub parkkaro-images-bucket-${Environment}
 
   FrontendBucketName:
     Description: S3 bucket for frontend hosting
@@ -1149,7 +1149,7 @@ Outputs:
     Description: Frontend S3 website URL
     Value: !GetAtt FrontendBucket.WebsiteURL
     Export:
-      Name: !Sub parkshare-frontend-url-${Environment}
+      Name: !Sub parkkaro-frontend-url-${Environment}
 
   # DynamoDB
   DynamoDBTablePrefix:

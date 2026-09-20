@@ -46,7 +46,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
           P
         </div>
         <span className="text-xs font-extrabold text-slate-900 tracking-tight">
-          ParkShare Access Pass
+          ParkKaro Access Pass
         </span>
       </div>
 

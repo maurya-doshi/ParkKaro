@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Feature: Parking Recommendations (Hardened)
+ * ParkKaro AI — Feature: Parking Recommendations (Hardened)
  *
  * POST /ai/recommend
  *

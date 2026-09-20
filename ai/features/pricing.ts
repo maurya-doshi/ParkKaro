@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Feature: Host Pricing Assistant (Hardened)
+ * ParkKaro AI — Feature: Host Pricing Assistant (Hardened)
  *
  * POST /ai/pricing
  *
@@ -109,7 +109,7 @@ export async function generatePricingEstimate(
 
 const CANONICAL_DISCLAIMER =
   'This is an AI-generated estimate for informational purposes only. ' +
-  'ParkShare does not guarantee market prices. ' +
+  'ParkKaro does not guarantee market prices. ' +
   'Always verify against current market conditions before setting your listing price.';
 
 /**
@@ -160,7 +160,7 @@ function fallbackPricingEstimate(
 
 /**
  * Neutral fallback when no market context is available at all.
- * Returns a ₹40/hour baseline (ParkShare market default).
+ * Returns a ₹40/hour baseline (ParkKaro market default).
  */
 function neutralFallback(currentHourlyRate?: number): PricingEstimate {
   const base = currentHourlyRate ?? 40;

@@ -1,5 +1,5 @@
 /**
- * Vehicle model — corresponds to parkshare-vehicles table.
+ * Vehicle model — corresponds to parkkaro-vehicles table.
  */
 
 export type VehicleType = 'CAR' | 'BIKE' | 'SUV' | 'TRUCK' | 'EV';

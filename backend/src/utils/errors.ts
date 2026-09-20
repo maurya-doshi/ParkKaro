@@ -1,5 +1,5 @@
 /**
- * Custom error classes for the ParkShare backend.
+ * Custom error classes for the ParkKaro backend.
  * All extend AppError which carries an HTTP status code and error code.
  */
 

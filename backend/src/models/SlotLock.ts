@@ -1,5 +1,5 @@
 /**
- * SlotLock model — corresponds to parkshare-slot-locks table.
+ * SlotLock model — corresponds to parkkaro-slot-locks table.
  * Used for atomic reservation and double-booking prevention.
  */
 

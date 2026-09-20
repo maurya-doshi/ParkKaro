@@ -1,5 +1,5 @@
 /**
- * Booking model — corresponds to parkshare-bookings table.
+ * Booking model — corresponds to parkkaro-bookings table.
  */
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';

@@ -1,5 +1,5 @@
 /**
- * AWS Lambda handler for ParkShare backend.
+ * AWS Lambda handler for ParkKaro backend.
  *
  * Wraps the Express.js application for deployment behind API Gateway.
  * Uses the serverless-http adapter to translate API Gateway events

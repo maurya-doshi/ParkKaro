@@ -1,8 +1,8 @@
-# ParkShare — Database Schema (DynamoDB)
+# ParkKaro — Database Schema (DynamoDB)
 
 > **Owner:** Person 2 (Backend)  
 > **Last Updated:** 2026-09-18  
-> **DynamoDB Table Prefix:** `parkshare-` (configurable via `DYNAMODB_TABLE_PREFIX`)
+> **DynamoDB Table Prefix:** `parkkaro-` (configurable via `DYNAMODB_TABLE_PREFIX`)
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## 1. Users
 
-**Table:** `parkshare-users`
+**Table:** `parkkaro-users`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -54,7 +54,7 @@
 
 ## 2. ParkingListings
 
-**Table:** `parkshare-parking`
+**Table:** `parkkaro-parking`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -97,7 +97,7 @@
 
 ## 3. Bookings
 
-**Table:** `parkshare-bookings`
+**Table:** `parkkaro-bookings`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -137,7 +137,7 @@
 
 ## 4. SlotLocks (Double-Booking Prevention)
 
-**Table:** `parkshare-slot-locks`
+**Table:** `parkkaro-slot-locks`
 
 > **This table is the core of the double-booking prevention strategy.** See Section 15 for the full strategy.
 
@@ -158,7 +158,7 @@ See [Section 15](#15-double-booking-prevention-strategy) for how this table work
 
 ## 5. Vehicles
 
-**Table:** `parkshare-vehicles`
+**Table:** `parkkaro-vehicles`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -183,7 +183,7 @@ See [Section 15](#15-double-booking-prevention-strategy) for how this table work
 
 ## 6. Reviews
 
-**Table:** `parkshare-reviews`
+**Table:** `parkkaro-reviews`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -207,7 +207,7 @@ See [Section 15](#15-double-booking-prevention-strategy) for how this table work
 
 ## 7. Favorites
 
-**Table:** `parkshare-favorites`
+**Table:** `parkkaro-favorites`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -221,7 +221,7 @@ No GSIs needed — queries are always by userId.
 
 ## 8. Payments
 
-**Table:** `parkshare-payments`
+**Table:** `parkkaro-payments`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -247,7 +247,7 @@ No GSIs needed — queries are always by userId.
 
 ## 9. Payouts
 
-**Table:** `parkshare-payouts`
+**Table:** `parkkaro-payouts`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -271,7 +271,7 @@ No GSIs needed — queries are always by userId.
 
 ## 10. Notifications
 
-**Table:** `parkshare-notifications`
+**Table:** `parkkaro-notifications`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -290,7 +290,7 @@ No additional GSIs — queries are always by userId with sort.
 
 ## 11. Conversations
 
-**Table:** `parkshare-conversations`
+**Table:** `parkkaro-conversations`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -315,7 +315,7 @@ No additional GSIs — queries are always by userId with sort.
 
 ## 12. Messages
 
-**Table:** `parkshare-messages`
+**Table:** `parkkaro-messages`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -331,7 +331,7 @@ No additional GSIs — messages are always queried by conversationId.
 
 ## 13. Disputes
 
-**Table:** `parkshare-disputes`
+**Table:** `parkkaro-disputes`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -359,7 +359,7 @@ No additional GSIs — messages are always queried by conversationId.
 
 ## 14. Reports
 
-**Table:** `parkshare-reports`
+**Table:** `parkkaro-reports`
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -478,20 +478,20 @@ DynamoDB conditional expressions operate on a single item. You cannot conditiona
 
 | # | Table Name | PK | SK | GSI Count |
 |---|-----------|----|----|-----------|
-| 1 | parkshare-users | userId | — | 2 |
-| 2 | parkshare-parking | listingId | — | 4 |
-| 3 | parkshare-bookings | bookingId | — | 4 |
-| 4 | parkshare-slot-locks | listingId | slotKey | 0 |
-| 5 | parkshare-vehicles | vehicleId | — | 1 |
-| 6 | parkshare-reviews | reviewId | — | 3 |
-| 7 | parkshare-favorites | userId | listingId | 0 |
-| 8 | parkshare-payments | paymentId | — | 2 |
-| 9 | parkshare-payouts | payoutId | — | 1 |
-| 10 | parkshare-notifications | userId | notificationId | 0 |
-| 11 | parkshare-conversations | conversationId | — | 2 |
-| 12 | parkshare-messages | conversationId | messageId | 0 |
-| 13 | parkshare-disputes | disputeId | — | 3 |
-| 14 | parkshare-reports | reportId | — | 2 |
+| 1 | parkkaro-users | userId | — | 2 |
+| 2 | parkkaro-parking | listingId | — | 4 |
+| 3 | parkkaro-bookings | bookingId | — | 4 |
+| 4 | parkkaro-slot-locks | listingId | slotKey | 0 |
+| 5 | parkkaro-vehicles | vehicleId | — | 1 |
+| 6 | parkkaro-reviews | reviewId | — | 3 |
+| 7 | parkkaro-favorites | userId | listingId | 0 |
+| 8 | parkkaro-payments | paymentId | — | 2 |
+| 9 | parkkaro-payouts | payoutId | — | 1 |
+| 10 | parkkaro-notifications | userId | notificationId | 0 |
+| 11 | parkkaro-conversations | conversationId | — | 2 |
+| 12 | parkkaro-messages | conversationId | messageId | 0 |
+| 13 | parkkaro-disputes | disputeId | — | 3 |
+| 14 | parkkaro-reports | reportId | — | 2 |
 
 **Total: 14 tables, 24 GSIs**
 
@@ -517,8 +517,8 @@ Person 3 must grant the backend Lambda/ECS role:
     "dynamodb:TransactGetItems"
   ],
   "Resource": [
-    "arn:aws:dynamodb:*:*:table/parkshare-*",
-    "arn:aws:dynamodb:*:*:table/parkshare-*/index/*"
+    "arn:aws:dynamodb:*:*:table/parkkaro-*",
+    "arn:aws:dynamodb:*:*:table/parkkaro-*/index/*"
   ]
 }
 ```

@@ -1,5 +1,5 @@
 /**
- * Date/time utility functions for ParkShare.
+ * Date/time utility functions for ParkKaro.
  * All times are stored and compared in ISO 8601 format.
  */
 

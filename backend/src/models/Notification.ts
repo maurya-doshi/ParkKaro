@@ -1,5 +1,5 @@
 /**
- * Notification model — corresponds to parkshare-notifications table.
+ * Notification model — corresponds to parkkaro-notifications table.
  */
 
 export type NotificationType =

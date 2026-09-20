@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Grounding Validator
+ * ParkKaro AI — Grounding Validator
  *
  * The grounding layer is the last line of defense against hallucination.
  * Before any AI response reaches the frontend, it passes through these validators.
@@ -160,7 +160,7 @@ export function groundPricingSuggestion(
       demandLevel:    raw.marketContext?.demandLevel   ?? null,
     },
     // Always overwrite with the canonical disclaimer
-    disclaimer: 'This is an AI-generated estimate for informational purposes only. ParkShare does not guarantee market prices. Always verify against current market conditions before setting your listing price.',
+    disclaimer: 'This is an AI-generated estimate for informational purposes only. ParkKaro does not guarantee market prices. Always verify against current market conditions before setting your listing price.',
   };
 }
 

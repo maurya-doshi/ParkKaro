@@ -14,8 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_USER_KEY = 'parkshare_auth_user';
-const AUTH_TOKEN_KEY = 'parkshare_auth_token';
+const AUTH_USER_KEY = 'parkkaro_auth_user';
+const AUTH_TOKEN_KEY = 'parkkaro_auth_token';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {

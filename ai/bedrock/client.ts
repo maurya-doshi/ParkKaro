@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Amazon Bedrock Client
+ * ParkKaro AI — Amazon Bedrock Client
  *
  * Wraps the AWS Bedrock Runtime SDK with:
  * - Timeout handling
@@ -148,5 +148,5 @@ export function parseJSON<T>(raw: string): T | null {
   }
 }
 
-/** The primary model to use for all ParkShare AI features. */
+/** The primary model to use for all ParkKaro AI features. */
 export const primaryModel = BEDROCK_MODELS.PRIMARY;

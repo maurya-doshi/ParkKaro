@@ -1,5 +1,5 @@
 /**
- * ParkShare AI Routes — backend/src/handlers/ai/routes.ts
+ * ParkKaro AI Routes — backend/src/handlers/ai/routes.ts
  *
  * Implements the /ai/* endpoints as defined in API_CONTRACT.md §19.
  *

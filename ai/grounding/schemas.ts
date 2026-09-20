@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Output Schema Validators
+ * ParkKaro AI — Output Schema Validators
  *
  * Zod schemas that validate the raw JSON returned by Bedrock BEFORE
  * it reaches the grounding validator.

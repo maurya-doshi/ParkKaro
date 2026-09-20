@@ -1,7 +1,7 @@
-# ParkShare — API Contract
+# ParkKaro — API Contract
 
 > **Owner:** Person 2 (Backend)  
-> **Base URL:** `http://localhost:3001` (dev) | `https://api.parkshare.com` (prod)  
+> **Base URL:** `http://localhost:3001` (dev) | `https://api.parkkaro.com` (prod)  
 > **Last Updated:** 2026-09-18
 
 ---
@@ -1382,7 +1382,7 @@ Raise a dispute for a booking. Caller must be the driver or host of the booking.
   "bookingId": "booking_def456",
   "reason": "Slot was occupied by another vehicle",
   "description": "Upon arrival at 10:00 AM, another vehicle was parked in the reserved space.",
-  "evidence": ["https://s3.amazonaws.com/parkshare/evidence1.jpg"]
+  "evidence": ["https://s3.amazonaws.com/parkkaro/evidence1.jpg"]
 }
 ```
 
@@ -1397,7 +1397,7 @@ Raise a dispute for a booking. Caller must be the driver or host of the booking.
     "reportedBy": "user_driver1",
     "reason": "Slot was occupied by another vehicle",
     "description": "Upon arrival at 10:00 AM, another vehicle was parked in the reserved space.",
-    "evidence": ["https://s3.amazonaws.com/parkshare/evidence1.jpg"],
+    "evidence": ["https://s3.amazonaws.com/parkkaro/evidence1.jpg"],
     "status": "OPEN",
     "createdAt": "2026-09-19T10:15:00.000Z",
     "updatedAt": "2026-09-19T10:15:00.000Z"

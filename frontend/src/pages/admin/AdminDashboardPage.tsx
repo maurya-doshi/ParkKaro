@@ -99,7 +99,7 @@ export const AdminDashboardPage: React.FC = () => {
     <DashboardLayout
       type="admin"
       title="Platform Operations"
-      subtitle="Real-time overview of ParkShare Bengaluru — users, listings, bookings, and revenue."
+      subtitle="Real-time overview of ParkKaro Bengaluru — users, listings, bookings, and revenue."
     >
       {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">

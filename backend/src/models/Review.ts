@@ -1,5 +1,5 @@
 /**
- * Review model — corresponds to parkshare-reviews table.
+ * Review model — corresponds to parkkaro-reviews table.
  */
 
 export interface Review {

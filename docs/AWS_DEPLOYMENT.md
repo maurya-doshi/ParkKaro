@@ -1,4 +1,4 @@
-# ParkShare — AWS Deployment Guide
+# ParkKaro — AWS Deployment Guide
 
 > **Owner:** Person 3 (AWS Infrastructure)
 > **Last Updated:** 2026-09-18
@@ -120,7 +120,7 @@ Edit `.env`:
 ```env
 # For local development
 AWS_REGION=ap-south-1
-DYNAMODB_TABLE_PREFIX=parkshare
+DYNAMODB_TABLE_PREFIX=parkkaro
 DYNAMODB_ENDPOINT=http://localhost:8000
 AUTH_MODE=demo
 PORT=3001
@@ -212,22 +212,22 @@ sam build --template-file template.yaml
 ```bash
 # Deploys API Gateway, Lambda, Cognito, S3, CloudWatch WITHOUT touching DynamoDB tables
 sam deploy \
-  --stack-name parkshare-production \
+  --stack-name parkkaro-production \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameter-overrides Environment=production CreateDynamoDBTables=false \
   --resolve-s3 \
-  --tags "Project=ParkShare Environment=production"
+  --tags "Project=ParkKaro Environment=production"
 ```
 
 **Fresh Deployment (First-time setup when no tables exist):**
 ```bash
 # Creates all 14 DynamoDB tables with Retain policies
 sam deploy \
-  --stack-name parkshare-production \
+  --stack-name parkkaro-production \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
   --parameter-overrides Environment=production CreateDynamoDBTables=true \
   --resolve-s3 \
-  --tags "Project=ParkShare Environment=production"
+  --tags "Project=ParkKaro Environment=production"
 ```
 
 **Subsequent deployments:**
@@ -239,7 +239,7 @@ sam deploy --config-env production
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name parkshare-production \
+  --stack-name parkkaro-production \
   --query 'Stacks[0].Outputs' \
   --output table
 ```
@@ -273,11 +273,11 @@ npx ts-node scripts/cognito-setup.ts seed-demo
 This creates:
 | Email | Role | Password |
 |-------|------|----------|
-| admin@parkshare.com | ADMIN | Admin@2026! |
-| host1@parkshare.com | HOST | Host@2026! |
-| host2@parkshare.com | HOST | Host@2026! |
-| driver1@parkshare.com | DRIVER | Driver@2026! |
-| driver2@parkshare.com | DRIVER | Driver@2026! |
+| admin@parkkaro.com | ADMIN | Admin@2026! |
+| host1@parkkaro.com | HOST | Host@2026! |
+| host2@parkkaro.com | HOST | Host@2026! |
+| driver1@parkkaro.com | DRIVER | Driver@2026! |
+| driver2@parkkaro.com | DRIVER | Driver@2026! |
 
 ### Verify API Health
 
@@ -319,7 +319,7 @@ REACT_APP_AWS_REGION=ap-south-1
 ```bash
 # Get frontend bucket name
 FRONTEND_BUCKET=$(aws cloudformation describe-stacks \
-  --stack-name parkshare-production \
+  --stack-name parkkaro-production \
   --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" \
   --output text)
 
@@ -340,7 +340,7 @@ aws s3 sync frontend/dist "s3://$FRONTEND_BUCKET" --delete
 |----------|-------|--------|
 | `NODE_ENV` | `production`/`staging` | Parameter |
 | `AWS_REGION_NAME` | `ap-south-1` | CloudFormation |
-| `DYNAMODB_TABLE_PREFIX` | `parkshare` | Parameter |
+| `DYNAMODB_TABLE_PREFIX` | `parkkaro` | Parameter |
 | `COGNITO_USER_POOL_ID` | Auto | CloudFormation ref |
 | `COGNITO_CLIENT_ID` | Auto | CloudFormation ref |
 | `S3_BUCKET_NAME` | Auto | CloudFormation ref |
@@ -366,20 +366,20 @@ aws s3 sync frontend/dist "s3://$FRONTEND_BUCKET" --delete
 
 ```bash
 # Tail logs in real-time
-sam logs --stack-name parkshare-production --tail
+sam logs --stack-name parkkaro-production --tail
 
 # View recent logs
-sam logs --stack-name parkshare-production --start-time "5min ago"
+sam logs --stack-name parkkaro-production --start-time "5min ago"
 
 # Filter for errors
-sam logs --stack-name parkshare-production --filter "ERROR"
+sam logs --stack-name parkkaro-production --filter "ERROR"
 ```
 
 ### CloudWatch Dashboard
 
 Access the monitoring dashboard:
 1. Go to AWS Console → CloudWatch → Dashboards
-2. Open `ParkShare-production`
+2. Open `ParkKaro-production`
 
 Metrics available:
 - Lambda: Invocations, Errors, Duration (avg & p99), Throttles
@@ -391,9 +391,9 @@ Metrics available:
 
 | Alarm | Triggers When |
 |-------|---------------|
-| `parkshare-lambda-errors-production` | > 10 errors in 5 min |
-| `parkshare-api-5xx-production` | > 5 server errors in 5 min |
-| `parkshare-lambda-duration-production` | p99 > 10s for 3 consecutive periods |
+| `parkkaro-lambda-errors-production` | > 10 errors in 5 min |
+| `parkkaro-api-5xx-production` | > 5 server errors in 5 min |
+| `parkkaro-lambda-duration-production` | p99 > 10s for 3 consecutive periods |
 
 ---
 
@@ -404,12 +404,12 @@ Metrics available:
 ```bash
 # List recent deployments
 aws cloudformation describe-stack-events \
-  --stack-name parkshare-production \
+  --stack-name parkkaro-production \
   --max-items 20
 
 # Rollback to previous version
 aws cloudformation rollback-stack \
-  --stack-name parkshare-production
+  --stack-name parkkaro-production
 ```
 
 ### Rollback Lambda to Previous Version
@@ -417,11 +417,11 @@ aws cloudformation rollback-stack \
 ```bash
 # List Lambda versions
 aws lambda list-versions-by-function \
-  --function-name parkshare-backend-production
+  --function-name parkkaro-backend-production
 
 # Update alias to point to previous version
 aws lambda update-alias \
-  --function-name parkshare-backend-production \
+  --function-name parkkaro-backend-production \
   --name live \
   --function-version <previous-version>
 ```
@@ -437,19 +437,19 @@ aws lambda update-alias \
 > ⚠️ **WARNING:** This deletes all infrastructure EXCEPT DynamoDB tables and S3 buckets (which have DeletionPolicy: Retain).
 
 ```bash
-sam delete --stack-name parkshare-production --no-prompts
+sam delete --stack-name parkkaro-production --no-prompts
 ```
 
 To also delete retained resources:
 ```bash
 # Delete DynamoDB tables
 for table in users parking bookings slot-locks vehicles reviews favorites payments payouts notifications conversations messages disputes reports; do
-  aws dynamodb delete-table --table-name "parkshare-$table" 2>/dev/null
+  aws dynamodb delete-table --table-name "parkkaro-$table" 2>/dev/null
 done
 
 # Empty and delete S3 buckets
-aws s3 rb s3://parkshare-images-production-<account-id> --force
-aws s3 rb s3://parkshare-frontend-production-<account-id> --force
+aws s3 rb s3://parkkaro-images-production-<account-id> --force
+aws s3 rb s3://parkkaro-frontend-production-<account-id> --force
 ```
 
 ---
@@ -465,7 +465,7 @@ aws s3 rb s3://parkshare-frontend-production-<account-id> --force
 #### "Internal Server Error" from API Gateway
 - **Check:** Lambda CloudWatch logs for the actual error
   ```bash
-  sam logs --stack-name parkshare-production --filter "ERROR"
+  sam logs --stack-name parkkaro-production --filter "ERROR"
   ```
 
 #### CORS Errors from Frontend
@@ -476,7 +476,7 @@ aws s3 rb s3://parkshare-frontend-production-<account-id> --force
 #### DynamoDB "ResourceNotFoundException"
 - **Check:** Tables exist with correct prefix
   ```bash
-  aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkshare')]"
+  aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkkaro')]"
   ```
 - **Check:** `DYNAMODB_TABLE_PREFIX` environment variable matches
 
@@ -494,12 +494,12 @@ aws s3 rb s3://parkshare-frontend-production-<account-id> --force
 
 ```bash
 # Check stack status
-aws cloudformation describe-stacks --stack-name parkshare-production \
+aws cloudformation describe-stacks --stack-name parkkaro-production \
   --query 'Stacks[0].StackStatus'
 
 # Check Lambda configuration
 aws lambda get-function-configuration \
-  --function-name parkshare-backend-production
+  --function-name parkkaro-backend-production
 
 # Test API directly
 curl -v https://<api-id>.execute-api.ap-south-1.amazonaws.com/production/health
@@ -512,7 +512,7 @@ aws dynamodb list-tables
 
 # Check CloudWatch alarms
 aws cloudwatch describe-alarms \
-  --alarm-name-prefix parkshare
+  --alarm-name-prefix parkkaro
 ```
 
 ---
@@ -577,7 +577,7 @@ The backend exposes AI endpoints at `/ai/*` — implement the Bedrock calls in t
 
 | Aspect | Staging | Production |
 |--------|---------|------------|
-| Stack Name | parkshare-staging | parkshare-production |
+| Stack Name | parkkaro-staging | parkkaro-production |
 | DynamoDB PITR | Disabled | Enabled |
 | Change Confirmation | No | Yes |
 | Purpose | Testing | Live |

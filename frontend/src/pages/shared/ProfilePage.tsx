@@ -201,7 +201,7 @@ export const ProfilePage: React.FC = () => {
             Demo Role Switcher
           </h3>
           <p className="text-[11px] text-slate-500 mb-4">
-            ParkShare is a demo marketplace. Switch persona to explore the platform from different perspectives.
+            ParkKaro is a demo marketplace. Switch persona to explore the platform from different perspectives.
           </p>
           <div className="flex flex-wrap gap-3">
             {[

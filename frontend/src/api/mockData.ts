@@ -8,7 +8,7 @@ import { User } from '../types/user';
 export const DEMO_USERS: Record<string, User> = {
   driver: {
     userId: 'driver_demo_1',
-    email: 'driver1@demo.parkshare.com',
+    email: 'driver1@demo.parkkaro.com',
     name: 'Arjun Verma',
     phone: '+91 98765 43210',
     role: 'DRIVER',
@@ -19,7 +19,7 @@ export const DEMO_USERS: Record<string, User> = {
   },
   host: {
     userId: 'host_demo_1',
-    email: 'host1@demo.parkshare.com',
+    email: 'host1@demo.parkkaro.com',
     name: 'Priya Sharma',
     phone: '+91 98123 45678',
     role: 'HOST',
@@ -30,7 +30,7 @@ export const DEMO_USERS: Record<string, User> = {
   },
   admin: {
     userId: 'admin_demo_1',
-    email: 'admin@demo.parkshare.com',
+    email: 'admin@demo.parkkaro.com',
     name: 'Super Administrator',
     phone: '+91 99999 88888',
     role: 'ADMIN',
@@ -366,7 +366,7 @@ export const DEMO_BOOKINGS: Booking[] = [
     hostEarnings: 162,
     paymentStatus: 'PAID',
     bookingStatus: 'ACTIVE',
-    qrData: 'PARKSHARE-AUTH:booking_active101:listing_01:user_driver1:ACTIVE',
+    qrData: 'PARKKARO-AUTH:booking_active101:listing_01:user_driver1:ACTIVE',
     qrVerificationCode: 'PK-9942',
     createdAt: '2026-09-18T14:30:00.000Z',
     updatedAt: '2026-09-19T09:05:00.000Z'
@@ -394,7 +394,7 @@ export const DEMO_BOOKINGS: Booking[] = [
     hostEarnings: 198,
     paymentStatus: 'PAID',
     bookingStatus: 'CONFIRMED',
-    qrData: 'PARKSHARE-AUTH:booking_upcoming102:listing_02:user_driver1:CONFIRMED',
+    qrData: 'PARKKARO-AUTH:booking_upcoming102:listing_02:user_driver1:CONFIRMED',
     qrVerificationCode: 'IN-4819',
     createdAt: '2026-09-18T16:00:00.000Z',
     updatedAt: '2026-09-18T16:00:00.000Z'
@@ -422,7 +422,7 @@ export const DEMO_BOOKINGS: Booking[] = [
     hostEarnings: 162,
     paymentStatus: 'PAID',
     bookingStatus: 'COMPLETED',
-    qrData: 'PARKSHARE-AUTH:booking_past103:listing_04:user_driver1:COMPLETED',
+    qrData: 'PARKKARO-AUTH:booking_past103:listing_04:user_driver1:COMPLETED',
     qrVerificationCode: 'MG-1102',
     createdAt: '2026-09-14T19:20:00.000Z',
     updatedAt: '2026-09-15T17:05:00.000Z'
@@ -527,7 +527,7 @@ export const DEMO_MESSAGES: Record<string, ChatMessage[]> = {
       conversationId: 'conv_01',
       senderId: 'user_host1',
       senderName: 'Priya Sharma',
-      content: 'Yes, just show the ParkShare QR code or say code PK-9942 and they will open the boom barrier immediately!',
+      content: 'Yes, just show the ParkKaro QR code or say code PK-9942 and they will open the boom barrier immediately!',
       createdAt: '2026-09-18T15:05:00.000Z'
     },
     {

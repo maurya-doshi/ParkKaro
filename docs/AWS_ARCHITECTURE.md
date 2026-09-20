@@ -1,4 +1,4 @@
-# ParkShare — AWS Architecture
+# ParkKaro — AWS Architecture
 
 > **Owner:** Person 3 (AWS Infrastructure)
 > **Last Updated:** 2026-09-18
@@ -16,14 +16,14 @@
                              ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    S3 (Frontend Hosting)                             │
-│            parkshare-frontend-{env}-{accountId}                     │
+│            parkkaro-frontend-{env}-{accountId}                     │
 │         Static website: index.html, JS, CSS, assets                 │
 └────────────────────────────┬─────────────────────────────────────────┘
                              │ API calls
                              ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      API GATEWAY (REST)                              │
-│               parkshare-api-{environment}                            │
+│               parkkaro-api-{environment}                            │
 │                                                                      │
 │   Routes:                                                            │
 │     ANY /              → Lambda (proxy)                              │
@@ -40,7 +40,7 @@
                              ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                    LAMBDA FUNCTION                                    │
-│             parkshare-backend-{environment}                           │
+│             parkkaro-backend-{environment}                           │
 │                                                                      │
 │   Runtime:  Node.js 18.x                                             │
 │   Handler:  dist/lambda.handler                                      │
@@ -79,8 +79,8 @@
 
 | Property | Value |
 |----------|-------|
-| Pool Name | `parkshare-users-{env}` |
-| Client Name | `parkshare-web-{env}` |
+| Pool Name | `parkkaro-users-{env}` |
+| Client Name | `parkkaro-web-{env}` |
 | Sign-in | Email (case-insensitive) |
 | Verification | Email auto-verified |
 | Password Policy | 8+ chars, upper, lower, numbers |
@@ -127,20 +127,20 @@ Extracts: sub (userId), email, name, custom:role
 
 | # | Table | PK | SK | GSIs |
 |---|-------|----|----|------|
-| 1 | parkshare-users | userId | — | email-index, role-index |
-| 2 | parkshare-parking | listingId | — | hostId-index, area-price-index, city-index, status-index |
-| 3 | parkshare-bookings | bookingId | — | driverId-index, hostId-index, listingId-index, status-index |
-| 4 | parkshare-slot-locks | listingId | slotKey | — |
-| 5 | parkshare-vehicles | vehicleId | — | userId-index |
-| 6 | parkshare-reviews | reviewId | — | listingId-index, userId-index, bookingId-index |
-| 7 | parkshare-favorites | userId | listingId | — |
-| 8 | parkshare-payments | paymentId | — | bookingId-index, userId-index |
-| 9 | parkshare-payouts | payoutId | — | hostId-index |
-| 10 | parkshare-notifications | userId | notificationId | — |
-| 11 | parkshare-conversations | conversationId | — | participant1-index, participant2-index |
-| 12 | parkshare-messages | conversationId | messageId | — |
-| 13 | parkshare-disputes | disputeId | — | bookingId-index, status-index, reportedBy-index |
-| 14 | parkshare-reports | reportId | — | status-index, reportedBy-index |
+| 1 | parkkaro-users | userId | — | email-index, role-index |
+| 2 | parkkaro-parking | listingId | — | hostId-index, area-price-index, city-index, status-index |
+| 3 | parkkaro-bookings | bookingId | — | driverId-index, hostId-index, listingId-index, status-index |
+| 4 | parkkaro-slot-locks | listingId | slotKey | — |
+| 5 | parkkaro-vehicles | vehicleId | — | userId-index |
+| 6 | parkkaro-reviews | reviewId | — | listingId-index, userId-index, bookingId-index |
+| 7 | parkkaro-favorites | userId | listingId | — |
+| 8 | parkkaro-payments | paymentId | — | bookingId-index, userId-index |
+| 9 | parkkaro-payouts | payoutId | — | hostId-index |
+| 10 | parkkaro-notifications | userId | notificationId | — |
+| 11 | parkkaro-conversations | conversationId | — | participant1-index, participant2-index |
+| 12 | parkkaro-messages | conversationId | messageId | — |
+| 13 | parkkaro-disputes | disputeId | — | bookingId-index, status-index, reportedBy-index |
+| 14 | parkkaro-reports | reportId | — | status-index, reportedBy-index |
 
 **Configuration:**
 - Billing: PAY_PER_REQUEST (on-demand)
@@ -152,11 +152,11 @@ Extracts: sub (userId), email, name, custom:role
 ### 3. Amazon S3 — Storage
 
 #### Images Bucket
-**Resource:** `ParkShareImagesBucket`
+**Resource:** `ParkKaroImagesBucket`
 
 | Property | Value |
 |----------|-------|
-| Bucket | `parkshare-images-{env}-{accountId}` |
+| Bucket | `parkkaro-images-{env}-{accountId}` |
 | Versioning | Enabled |
 | Public Access | Blocked (all 4 settings) |
 | CORS | GET, PUT from any origin |
@@ -190,7 +190,7 @@ Frontend                    Backend (Lambda)                S3
 
 | Property | Value |
 |----------|-------|
-| Bucket | `parkshare-frontend-{env}-{accountId}` |
+| Bucket | `parkkaro-frontend-{env}-{accountId}` |
 | Website Hosting | Enabled (index.html) |
 | Public Access | Allowed (read-only) |
 
@@ -198,7 +198,7 @@ Frontend                    Backend (Lambda)                S3
 
 ### 4. API Gateway — REST API
 
-**Resource:** `ParkShareApi`
+**Resource:** `ParkKaroApi`
 
 | Property | Value |
 |----------|-------|
@@ -237,11 +237,11 @@ API Gateway (ANY /{proxy+})
 
 ### 5. AWS Lambda — Compute
 
-**Resource:** `ParkShareBackendFunction`
+**Resource:** `ParkKaroBackendFunction`
 
 | Property | Value |
 |----------|-------|
-| Name | `parkshare-backend-{env}` |
+| Name | `parkkaro-backend-{env}` |
 | Runtime | Node.js 18.x |
 | Memory | 1024 MB |
 | Timeout | 30 seconds |
@@ -286,8 +286,8 @@ API Gateway (ANY /{proxy+})
 **Log Groups:**
 | Log Group | Source | Retention |
 |-----------|--------|-----------|
-| `/aws/apigateway/parkshare-api-{env}` | API Gateway access logs | 30 days |
-| `/aws/lambda/parkshare-backend-{env}` | Lambda execution logs | 30 days |
+| `/aws/apigateway/parkkaro-api-{env}` | API Gateway access logs | 30 days |
+| `/aws/lambda/parkkaro-backend-{env}` | Lambda execution logs | 30 days |
 
 **Alarms:**
 
@@ -297,7 +297,7 @@ API Gateway (ANY /{proxy+})
 | API 5XX | 5XXError (Sum) | > 5 | 5 min |
 | Lambda Duration | Duration (p99) | > 10s | 5 min × 3 |
 
-**Dashboard:** `ParkShare-{environment}`
+**Dashboard:** `ParkKaro-{environment}`
 
 Widgets:
 - Lambda Invocations, Errors, Throttles
@@ -316,7 +316,7 @@ The Lambda execution role has **least-privilege** access:
 
 | Service | Actions | Resource |
 |---------|---------|----------|
-| DynamoDB | Get/Put/Update/Delete/Query/Scan/Batch/Transact | `parkshare-*` tables + indexes |
+| DynamoDB | Get/Put/Update/Delete/Query/Scan/Batch/Transact | `parkkaro-*` tables + indexes |
 | S3 | PutObject, GetObject, DeleteObject, ListBucket | Images bucket |
 | Cognito | Admin user operations | User Pool |
 | Bedrock | InvokeModel, InvokeModelWithResponseStream | Foundation models |
@@ -339,7 +339,7 @@ The Lambda execution role has **least-privilege** access:
 
 | Variable | Source | Description |
 |----------|--------|-------------|
-| `DYNAMODB_TABLE_PREFIX` | Parameter | `parkshare` |
+| `DYNAMODB_TABLE_PREFIX` | Parameter | `parkkaro` |
 | `COGNITO_USER_POOL_ID` | CloudFormation | Auto-populated |
 | `COGNITO_CLIENT_ID` | CloudFormation | Auto-populated |
 | `S3_BUCKET_NAME` | CloudFormation | Auto-populated |

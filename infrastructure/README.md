@@ -1,10 +1,10 @@
-# ParkShare Infrastructure
+# ParkKaro Infrastructure
 
-> AWS-powered serverless infrastructure for ParkShare — the parking marketplace.
+> AWS-powered serverless infrastructure for ParkKaro — the parking marketplace.
 
 ## Overview
 
-This directory contains the complete AWS infrastructure-as-code for ParkShare using **AWS SAM (Serverless Application Model)**.
+This directory contains the complete AWS infrastructure-as-code for ParkKaro using **AWS SAM (Serverless Application Model)**.
 
 ## Architecture
 
@@ -41,7 +41,7 @@ infrastructure/
 > - `samconfig.toml` defaults to `CreateDynamoDBTables=false` in production.
 > - Deploy scripts default to **safe mode**, leaving existing tables untouched.
 > - All tables have `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain`.
-> - The Lambda IAM role uses wildcard ARNs (`parkshare-*`) to access any pre-existing or CloudFormation-managed tables.
+> - The Lambda IAM role uses wildcard ARNs (`parkkaro-*`) to access any pre-existing or CloudFormation-managed tables.
 > - To deploy to a clean account where tables do NOT exist yet, pass `-CreateTables` (PowerShell) or `--create-tables` (Bash), or use the `production-fresh` SAM profile.
 
 ## Quick Start

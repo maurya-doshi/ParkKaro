@@ -1,5 +1,5 @@
 /**
- * Dispute model — corresponds to parkshare-disputes table.
+ * Dispute model — corresponds to parkkaro-disputes table.
  */
 
 export type DisputeStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';

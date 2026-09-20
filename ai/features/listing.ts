@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Feature: Listing Description Generator (Hardened)
+ * ParkKaro AI — Feature: Listing Description Generator (Hardened)
  *
  * POST /ai/listing-description
  *

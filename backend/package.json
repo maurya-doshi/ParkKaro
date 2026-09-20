@@ -1,7 +1,7 @@
 {
-  "name": "parkshare-backend",
+  "name": "parkkaro-backend",
   "version": "1.0.0",
-  "description": "ParkShare — Airbnb for Parking — Backend API",
+  "description": "ParkKaro — Airbnb for Parking — Backend API",
   "main": "dist/app.js",
   "scripts": {
     "dev": "ts-node src/app.ts",

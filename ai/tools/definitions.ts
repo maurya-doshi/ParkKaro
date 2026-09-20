@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Tool / Function Definitions
+ * ParkKaro AI — Tool / Function Definitions
  *
  * If the selected Bedrock model supports tool use (function calling),
  * these definitions describe the controlled backend functions the AI

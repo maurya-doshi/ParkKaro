@@ -104,7 +104,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} ParkShare Technologies Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ParkKaro Technologies Inc. All rights reserved.</p>
           <div className="flex items-center gap-1">
             <span>Built with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" />

@@ -73,7 +73,7 @@ export const AdminDisputesPage: React.FC = () => {
     <DashboardLayout
       type="admin"
       title="Dispute Resolution Center"
-      subtitle="Review and resolve open disputes raised by drivers and hosts on the ParkShare platform."
+      subtitle="Review and resolve open disputes raised by drivers and hosts on the ParkKaro platform."
     >
       <div className="space-y-5">
         {/* Summary Cards */}

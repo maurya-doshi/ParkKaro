@@ -1,5 +1,5 @@
 /**
- * ParkShare Models — Domain entity definitions matching DynamoDB tables.
+ * ParkKaro Models — Domain entity definitions matching DynamoDB tables.
  */
 
 export * from './User';

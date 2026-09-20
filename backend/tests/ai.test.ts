@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Comprehensive Integration Tests
+ * ParkKaro AI — Comprehensive Integration Tests
  *
  * Tests every scenario required by the hardening specification:
  * 1. Valid prompts / happy path
@@ -464,7 +464,7 @@ describe('POST /ai/pricing', () => {
     rationale:      'Area average is ₹42/hr. Covered spots command a slight premium.',
     changeFromCurrent: 12.5,
     marketContext: { areaAverage: 42, comparableCount: 4, demandLevel: 'MEDIUM' },
-    disclaimer:    'This is an AI-generated estimate for informational purposes only. ParkShare does not guarantee market prices. Always verify against current market conditions before setting your listing price.',
+    disclaimer:    'This is an AI-generated estimate for informational purposes only. ParkKaro does not guarantee market prices. Always verify against current market conditions before setting your listing price.',
   });
 
   // 3a. Happy path with listingId

@@ -1,5 +1,5 @@
 /**
- * ParkShare AI — Model Configuration
+ * ParkKaro AI — Model Configuration
  *
  * Centralized model IDs and configuration for Amazon Bedrock.
  * All hackathon usage is optimised for cost and latency.
@@ -12,7 +12,7 @@ export const BEDROCK_MODELS = {
    * Primary model: Claude Haiku 3 (claude-3-haiku-20240307)
    * - Fastest and cheapest Claude model
    * - Excellent for structured JSON extraction
-   * - Good enough for all ParkShare AI features
+   * - Good enough for all ParkKaro AI features
    * Input:  $0.25 / 1M tokens
    * Output: $1.25 / 1M tokens
    */

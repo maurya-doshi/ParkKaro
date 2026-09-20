@@ -1,5 +1,5 @@
 /**
- * Payout model — corresponds to parkshare-payouts table.
+ * Payout model — corresponds to parkkaro-payouts table.
  */
 
 export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';

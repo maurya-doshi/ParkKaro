@@ -1,4 +1,4 @@
-# ParkShare — Bedrock AI Documentation
+# ParkKaro — Bedrock AI Documentation
 
 > **Owner:** Person 4 (AI / Amazon Bedrock)  
 > **Branch:** `person4/ai`  
@@ -97,7 +97,7 @@ ai/
 **Why Claude Haiku 3?**
 - Fastest and cheapest Claude model
 - Excellent at structured JSON extraction
-- Good enough for all ParkShare AI features at hackathon scale
+- Good enough for all ParkKaro AI features at hackathon scale
 - Cost: ~$0.25/1M input tokens, ~$1.25/1M output tokens
 
 ### Token Limits per Feature
@@ -379,7 +379,7 @@ Defined in `ai/tools/definitions.ts`. These are structured function definitions 
         "comparableCount": 5,
         "demandLevel": "MEDIUM"
       },
-      "disclaimer": "This is an AI-generated estimate for informational purposes only. ParkShare does not guarantee market prices. Always verify against current market conditions before setting your listing price."
+      "disclaimer": "This is an AI-generated estimate for informational purposes only. ParkKaro does not guarantee market prices. Always verify against current market conditions before setting your listing price."
     }
   }
 }

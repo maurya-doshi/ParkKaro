@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# ParkShare — Full Deployment Script (PowerShell/Windows)
+# ParkKaro — Full Deployment Script (PowerShell/Windows)
 # ═══════════════════════════════════════════════════════════════
 #
 # Usage:
@@ -41,12 +41,12 @@ $ProjectRoot = (Resolve-Path "$PSScriptRoot\..\..").Path
 $InfraDir = "$ProjectRoot\infrastructure"
 $BackendDir = "$ProjectRoot\backend"
 $FrontendDir = "$ProjectRoot\frontend"
-$StackName = "parkshare-$Environment"
+$StackName = "parkkaro-$Environment"
 $DynamoDBSafe = if ($CreateTables) { "true" } else { "false" }
 
 Write-Host ""
 Write-Host "=======================================================" -ForegroundColor Cyan
-Write-Host "  ParkShare -- AWS Deployment" -ForegroundColor Cyan
+Write-Host "  ParkKaro -- AWS Deployment" -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host "  Environment:     $Environment"
 Write-Host "  Stack:           $StackName"
@@ -116,7 +116,7 @@ sam deploy `
     --no-confirm-changeset `
     --no-fail-on-empty-changeset `
     --resolve-s3 `
-    --tags "Project=ParkShare Environment=$Environment"
+    --tags "Project=ParkKaro Environment=$Environment"
 Pop-Location
 Write-Host "  [OK] SAM stack deployed" -ForegroundColor Green
 Write-Host ""
@@ -217,8 +217,8 @@ try {
 Write-Host ""
 Write-Host "[Step 8] Verifying DynamoDB tables..." -ForegroundColor Yellow
 try {
-    $tables = aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkshare')]" --output json | ConvertFrom-Json
-    Write-Host "  Found $($tables.Count) parkshare tables:" -ForegroundColor Green
+    $tables = aws dynamodb list-tables --query "TableNames[?starts_with(@, 'parkkaro')]" --output json | ConvertFrom-Json
+    Write-Host "  Found $($tables.Count) parkkaro tables:" -ForegroundColor Green
     foreach ($t in $tables) {
         Write-Host "    - $t" -ForegroundColor Gray
     }

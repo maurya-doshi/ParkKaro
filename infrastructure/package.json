@@ -1,7 +1,7 @@
 {
-  "name": "parkshare-infrastructure",
+  "name": "parkkaro-infrastructure",
   "version": "1.0.0",
-  "description": "ParkShare AWS Infrastructure — SAM/CloudFormation, scripts, and deployment tools",
+  "description": "ParkKaro AWS Infrastructure — SAM/CloudFormation, scripts, and deployment tools",
   "private": true,
   "scripts": {
     "build": "cd ../backend && npm run build",
@@ -15,9 +15,9 @@
     "s3:upload-url": "npx ts-node scripts/s3-presign.ts upload",
     "s3:download-url": "npx ts-node scripts/s3-presign.ts download",
     "validate": "sam validate --template-file template.yaml",
-    "stack:outputs": "aws cloudformation describe-stacks --stack-name parkshare-production --query 'Stacks[0].Outputs'",
-    "stack:delete": "sam delete --stack-name parkshare-production --no-prompts",
-    "logs": "sam logs --stack-name parkshare-production --tail"
+    "stack:outputs": "aws cloudformation describe-stacks --stack-name parkkaro-production --query 'Stacks[0].Outputs'",
+    "stack:delete": "sam delete --stack-name parkkaro-production --no-prompts",
+    "logs": "sam logs --stack-name parkkaro-production --tail"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.540.0",
