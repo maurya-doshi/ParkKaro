@@ -1,76 +1,55 @@
 import { apiClient } from './client';
-import { DEMO_FAVORITES } from './mockData';
-import { parkingApi } from './parking';
-import { ParkingListing } from '../types/parking';
 
-const MOCK_STORAGE_KEY = 'parkshare_demo_favorites';
-
-function getStoredFavorites(): string[] {
-  try {
-    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error('Error reading mock favorites', e);
-  }
-  return [...DEMO_FAVORITES];
-}
-
-function saveStoredFavorites(favs: string[]) {
-  try {
-    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(favs));
-  } catch (e) {
-    console.error('Error saving mock favorites', e);
-  }
+export interface FavoriteItem {
+  listingId: string;
+  title?: string;
+  area?: string;
+  pricePerHour?: number;
+  rating?: number;
+  addedAt?: string;
 }
 
 export const favoritesApi = {
-  async list(): Promise<ParkingListing[]> {
-    try {
-      const res = await apiClient.get<{ items: Array<{ listingId: string }> }>('/favorites');
-      if (res.success && res.data?.items) {
-        const ids = res.data.items.map((i) => i.listingId);
-        const searchResult = await parkingApi.search();
-        return searchResult.items.filter((item) => ids.includes(item.listingId));
-      }
-    } catch {
-      // Fallback
+  /**
+   * List user's favorites
+   * GET /favorites
+   */
+  async list(): Promise<FavoriteItem[]> {
+    const res = await apiClient.get<{ items: FavoriteItem[] }>('/favorites');
+    if (res && res.data) {
+      if (Array.isArray(res.data.items)) return res.data.items;
+      if (Array.isArray(res.data)) return res.data as any;
     }
-
-    const favIds = getStoredFavorites();
-    const searchResult = await parkingApi.search();
-    return searchResult.items.filter((item) => favIds.includes(item.listingId));
+    return [];
   },
 
+  /**
+   * Add a listing to favorites
+   * POST /favorites/{parkingId}
+   */
   async add(listingId: string): Promise<boolean> {
-    try {
-      const res = await apiClient.post<{ message: string }>(`/favorites/${listingId}`);
-      if (res.success) return true;
-    } catch {
-      // Fallback
-    }
-
-    const favs = getStoredFavorites();
-    if (!favs.includes(listingId)) {
-      saveStoredFavorites([...favs, listingId]);
-    }
-    return true;
+    const res = await apiClient.post<{ listingId: string; message: string }>(`/favorites/${listingId}`);
+    return !!res?.success;
   },
 
+  /**
+   * Remove listing from favorites
+   * DELETE /favorites/{parkingId}
+   */
   async remove(listingId: string): Promise<boolean> {
-    try {
-      const res = await apiClient.delete<{ message: string }>(`/favorites/${listingId}`);
-      if (res.success) return true;
-    } catch {
-      // Fallback
-    }
-
-    const favs = getStoredFavorites().filter((id) => id !== listingId);
-    saveStoredFavorites(favs);
-    return true;
+    const res = await apiClient.delete<{ message: string }>(`/favorites/${listingId}`);
+    return !!res?.success;
   },
 
+  /**
+   * Check if a listing is in user's favorites
+   */
   async isFavorite(listingId: string): Promise<boolean> {
-    const favs = getStoredFavorites();
-    return favs.includes(listingId);
+    try {
+      const items = await this.list();
+      return items.some((item) => item.listingId === listingId);
+    } catch {
+      return false;
+    }
   }
 };

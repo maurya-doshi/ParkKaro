@@ -1,59 +1,42 @@
 import { apiClient } from './client';
 import { NotificationItem } from '../types/message';
-import { DEMO_NOTIFICATIONS } from './mockData';
-
-const MOCK_STORAGE_KEY = 'parkshare_demo_notifications';
-
-function getStoredNotifications(): NotificationItem[] {
-  try {
-    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error('Error reading notifications', e);
-  }
-  return [...DEMO_NOTIFICATIONS];
-}
-
-function saveStoredNotifications(items: NotificationItem[]) {
-  try {
-    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(items));
-  } catch (e) {
-    console.error('Error saving notifications', e);
-  }
-}
 
 export const notificationsApi = {
+  /**
+   * List user notifications
+   * GET /notifications
+   */
   async list(): Promise<{ items: NotificationItem[]; unreadCount: number }> {
-    try {
-      const res = await apiClient.get<{ items: NotificationItem[]; unreadCount: number }>('/notifications');
-      if (res.success && res.data) return res.data;
-    } catch {
-      // Fallback
+    const res = await apiClient.get<{ items: NotificationItem[]; unreadCount: number }>('/notifications');
+    if (res && res.data) {
+      return {
+        items: Array.isArray(res.data.items) ? res.data.items : [],
+        unreadCount: typeof res.data.unreadCount === 'number' ? res.data.unreadCount : 0
+      };
     }
-
-    const items = getStoredNotifications();
-    const unreadCount = items.filter((n) => !n.read).length;
-    return { items, unreadCount };
+    return { items: [], unreadCount: 0 };
   },
 
+  /**
+   * Mark a notification as read
+   * POST /notifications/{id}/read
+   */
   async markAsRead(notificationId: string): Promise<boolean> {
-    try {
-      const res = await apiClient.post<{ message: string }>(`/notifications/${notificationId}/read`);
-      if (res.success) return true;
-    } catch {
-      // Fallback
-    }
-
-    const items = getStoredNotifications();
-    const updated = items.map((n) => (n.notificationId === notificationId ? { ...n, read: true } : n));
-    saveStoredNotifications(updated);
-    return true;
+    const res = await apiClient.post<{ message: string }>(`/notifications/${encodeURIComponent(notificationId)}/read`);
+    return !!res?.success;
   },
 
+  /**
+   * Mark all notifications as read by marking unread items
+   */
   async markAllAsRead(): Promise<boolean> {
-    const items = getStoredNotifications();
-    const updated = items.map((n) => ({ ...n, read: true }));
-    saveStoredNotifications(updated);
-    return true;
+    try {
+      const { items } = await this.list();
+      const unread = items.filter((n) => !n.read);
+      await Promise.all(unread.map((n) => this.markAsRead(n.notificationId)));
+      return true;
+    } catch {
+      return false;
+    }
   }
 };

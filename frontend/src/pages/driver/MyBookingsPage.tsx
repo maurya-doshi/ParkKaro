@@ -5,6 +5,7 @@ import { bookingsApi } from '../../api/bookings';
 import { reviewsApi } from '../../api/reviews';
 import { Booking, BookingStatus } from '../../types/booking';
 import { QRDisplay } from '../../components/booking/QRDisplay';
+import { ErrorState } from '../../components/common/ErrorState';
 import {
   Calendar,
   Clock,
@@ -22,6 +23,7 @@ import { useToast } from '../../context/ToastContext';
 export const MyBookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
   // Modals
@@ -36,11 +38,13 @@ export const MyBookingsPage: React.FC = () => {
 
   const loadBookings = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await bookingsApi.list();
       setBookings(res.items);
     } catch (e) {
       console.error(e);
+      setError(e);
     } finally {
       setLoading(false);
     }
@@ -126,7 +130,13 @@ export const MyBookingsPage: React.FC = () => {
         </div>
 
         {/* Bookings List */}
-        {loading ? (
+        {error ? (
+          <ErrorState
+            error={error}
+            onRetry={loadBookings}
+            title="Unable to load reservations"
+          />
+        ) : loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((n) => (
               <div key={n} className="h-32 bg-white rounded-3xl animate-pulse" />

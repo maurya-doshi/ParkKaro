@@ -7,6 +7,7 @@ import { Review } from '../../types/review';
 import { Rating } from '../../components/common/Rating';
 import { FavoriteButton } from '../../components/common/FavoriteButton';
 import { AmenityList } from '../../components/parking/AmenityList';
+import { ErrorState } from '../../components/common/ErrorState';
 import {
   MapPin,
   ShieldCheck,
@@ -30,6 +31,7 @@ export const ParkingDetailsPage: React.FC = () => {
   const [listing, setListing] = useState<ParkingListing | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown | null>(null);
 
   // Reservation Form State
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -38,9 +40,10 @@ export const ParkingDetailsPage: React.FC = () => {
   const [availability, setAvailability] = useState<AvailabilityCheckResponse | null>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  useEffect(() => {
+  const loadListingData = () => {
     if (!id) return;
     setLoading(true);
+    setError(null);
 
     Promise.all([parkingApi.getById(id), reviewsApi.getByListing(id)])
       .then(([listingData, reviewList]) => {
@@ -49,10 +52,13 @@ export const ParkingDetailsPage: React.FC = () => {
       })
       .catch((err) => {
         console.error(err);
-        showToast('Parking space not found', 'error');
-        navigate('/search');
+        setError(err);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadListingData();
   }, [id]);
 
   // Check availability when date or times change
@@ -65,6 +71,23 @@ export const ParkingDetailsPage: React.FC = () => {
       .catch((e) => console.error(e))
       .finally(() => setCheckingAvailability(false));
   }, [id, selectedDate, startTime, endTime, listing]);
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <ErrorState
+          error={error}
+          onRetry={loadListingData}
+          title="Parking Listing Unavailable"
+        />
+        <div className="text-center mt-4">
+          <Link to="/search" className="text-sm font-semibold text-blue-600 hover:underline">
+            ← Return to Search
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !listing) {
     return (

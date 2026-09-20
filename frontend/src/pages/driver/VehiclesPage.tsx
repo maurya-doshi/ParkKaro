@@ -33,6 +33,8 @@ export const VehiclesPage: React.FC = () => {
     loadVehicles();
   }, []);
 
+  const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -52,6 +54,40 @@ export const VehiclesPage: React.FC = () => {
       loadVehicles();
     } catch {
       showToast('Failed to add vehicle', 'error');
+    }
+  };
+
+  const startEdit = (vehicle: Vehicle) => {
+    setEditVehicle(vehicle);
+    setNumber(vehicle.vehicleNumber);
+    setType(vehicle.vehicleType);
+    setMake(vehicle.make);
+    setModel(vehicle.model);
+    setColor(vehicle.color);
+    setIsAdding(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editVehicle) return;
+    try {
+      await vehiclesApi.update(editVehicle.vehicleId, {
+        vehicleNumber: number.trim().toUpperCase(),
+        vehicleType: type,
+        make: make.trim(),
+        model: model.trim(),
+        color: color.trim() || 'White'
+      });
+      showToast('Vehicle updated successfully', 'success');
+      setIsAdding(false);
+      setEditVehicle(null);
+      setNumber('');
+      setMake('');
+      setModel('');
+      setColor('');
+      loadVehicles();
+    } catch {
+      showToast('Failed to update vehicle', 'error');
     }
   };
 
@@ -85,13 +121,99 @@ export const VehiclesPage: React.FC = () => {
       <div className="space-y-6">
         {/* Add vehicle form */}
         {isAdding && (
-          <form
-            onSubmit={handleAdd}
-            className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4 animate-in fade-in"
-          >
-            <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
-              Register New Vehicle
-            </h3>
+  <form
+    onSubmit={editVehicle ? handleUpdate : handleAdd}
+    className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4 animate-in fade-in"
+  >
+    <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
+      {editVehicle ? 'Edit Vehicle' : 'Register New Vehicle'}
+    </h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+          License Plate Number *
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. KA-03-MN-8921"
+          required
+          value={number}
+          onChange={(e) => setNumber(e.target.value.toUpperCase())}
+          className="w-full px-3 py-2 text-xs font-bold uppercase bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+          Vehicle Type
+        </label>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as VehicleType)}
+          className="w-full px-3 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
+        >
+          <option value="CAR">Car / Sedan / Hatchback</option>
+          <option value="SUV">SUV / MUV / Compact SUV</option>
+          <option value="EV">Electric Vehicle (EV)</option>
+          <option value="BIKE">Two-Wheeler / Motorbike</option>
+        </select>
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+          Make *
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. Tata, Hyundai, Kia, Honda"
+          required
+          value={make}
+          onChange={(e) => setMake(e.target.value)}
+          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+          Model & Color
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="e.g. Nexon EV"
+            required
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
+          />
+          <input
+            type="text"
+            placeholder="White"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-24 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
+          />
+        </div>
+      </div>
+    </div>
+    <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+      <button
+        type="button"
+        onClick={() => {
+          setIsAdding(false);
+          setEditVehicle(null);
+        }}
+        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition"
+      >
+        {editVehicle ? 'Update Vehicle' : 'Save Vehicle'}
+      </button>
+    </div>
+  </form>
+)}
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

@@ -5,6 +5,7 @@ import { FilterPanel, FilterState } from '../../components/search/FilterPanel';
 import { SortDropdown } from '../../components/search/SortDropdown';
 import { ParkingGrid } from '../../components/parking/ParkingGrid';
 import { MapPanel } from '../../components/parking/MapPanel';
+import { ErrorState } from '../../components/common/ErrorState';
 import { parkingApi } from '../../api/parking';
 import { ParkingListing, ParkingType, VehicleType } from '../../types/parking';
 import { SlidersHorizontal, Map, List, X, Sparkles } from 'lucide-react';
@@ -35,8 +36,11 @@ export const SearchResultsPage: React.FC = () => {
 
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'distance'>(sortByParam);
 
+  const [error, setError] = useState<unknown | null>(null);
+
   const loadListings = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await parkingApi.search({
         area: areaParam || undefined,
@@ -52,6 +56,8 @@ export const SearchResultsPage: React.FC = () => {
       setListings(res.items);
     } catch (e) {
       console.error('Failed to load listings', e);
+      setError(e);
+      setListings([]);
     } finally {
       setLoading(false);
     }
@@ -168,13 +174,21 @@ export const SearchResultsPage: React.FC = () => {
                 mobileView === 'map' ? 'hidden xl:block' : 'block'
               }`}
             >
-              <ParkingGrid
-                listings={listings}
-                loading={loading}
-                activeListingId={activeListingId}
-                onHoverListing={setActiveListingId}
-                onResetFilters={handleResetFilters}
-              />
+              {error ? (
+                <ErrorState
+                  error={error}
+                  onRetry={loadListings}
+                  title="Unable to load parking listings"
+                />
+              ) : (
+                <ParkingGrid
+                  listings={listings}
+                  loading={loading}
+                  activeListingId={activeListingId}
+                  onHoverListing={setActiveListingId}
+                  onResetFilters={handleResetFilters}
+                />
+              )}
             </div>
 
             {/* Map Column (Sticky on desktop, toggleable on mobile) */}

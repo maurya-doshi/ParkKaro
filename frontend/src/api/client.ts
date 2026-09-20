@@ -6,6 +6,20 @@ export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined | null>;
 }
 
+export class ApiError extends Error {
+  public code: string;
+  public status: number;
+  public details?: unknown;
+
+  constructor(message: string, code: string = 'INTERNAL_ERROR', status: number = 500, details?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.code = code;
+    this.status = status;
+    this.details = details;
+  }
+}
+
 export class ApiClient {
   private static instance: ApiClient;
 
@@ -35,16 +49,20 @@ export class ApiClient {
       try {
         const user = JSON.parse(savedUser);
         headers['X-Demo-User-Id'] = user.userId || 'user_driver1';
-        headers['X-Demo-Email'] = user.email || 'driver@parkshare.demo';
-        headers['X-Demo-Name'] = user.name || 'Demo User';
+        headers['X-Demo-Email'] = user.email || 'driver@example.com';
+        headers['X-Demo-Name'] = user.name || 'John Driver';
         headers['X-Demo-Role'] = user.role || 'DRIVER';
       } catch (err) {
         console.warn('Failed parsing saved user', err);
+        headers['X-Demo-User-Id'] = 'user_driver1';
+        headers['X-Demo-Email'] = 'driver@example.com';
+        headers['X-Demo-Name'] = 'John Driver';
+        headers['X-Demo-Role'] = 'DRIVER';
       }
     } else {
       headers['X-Demo-User-Id'] = 'user_driver1';
-      headers['X-Demo-Email'] = 'driver@parkshare.demo';
-      headers['X-Demo-Name'] = 'Arjun Verma';
+      headers['X-Demo-Email'] = 'driver@example.com';
+      headers['X-Demo-Name'] = 'John Driver';
       headers['X-Demo-Role'] = 'DRIVER';
     }
 
@@ -77,10 +95,10 @@ export class ApiClient {
       }
     };
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500); // Quick fallback to mock if backend not running
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+    try {
       const response = await fetch(url, {
         ...config,
         signal: controller.signal
@@ -88,15 +106,38 @@ export class ApiClient {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let responseData: any = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        // Non-JSON response
       }
 
-      const json = await response.json();
-      return json as ApiResponse<T>;
-    } catch (error) {
-      // Throw to allow fallback in domain API services
-      throw error;
+      if (!response.ok) {
+        const errorCode = responseData?.error?.code || `HTTP_${response.status}`;
+        const errorMessage = responseData?.error?.message || response.statusText || 'Request failed';
+        throw new ApiError(errorMessage, errorCode, response.status, responseData?.error?.details);
+      }
+
+      if (responseData && responseData.success === false) {
+        throw new ApiError(
+          responseData.error?.message || 'Operation failed',
+          responseData.error?.code || 'OPERATION_FAILED',
+          response.status,
+          responseData.error?.details
+        );
+      }
+
+      return responseData as ApiResponse<T>;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      if (error.name === 'AbortError') {
+        throw new ApiError('Request timed out after 15s', 'TIMEOUT_ERROR', 408);
+      }
+      throw new ApiError(error.message || 'Network request failed', 'NETWORK_ERROR', 0);
     }
   }
 
