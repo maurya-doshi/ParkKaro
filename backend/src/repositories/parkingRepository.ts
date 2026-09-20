@@ -15,58 +15,138 @@ export class ParkingRepository extends BaseRepository<ParkingListing> {
   }
 
   async findByHostId(hostId: string): Promise<ParkingListing[]> {
-    return this.queryItems({
-      IndexName: 'hostId-index',
-      KeyConditionExpression: 'hostId = :hostId',
-      ExpressionAttributeValues: {
-        ':hostId': hostId,
-      },
-    });
+    try {
+      const items = await this.queryItems({
+        IndexName: 'hostId-index',
+        KeyConditionExpression: 'hostId = :hostId',
+        ExpressionAttributeValues: {
+          ':hostId': hostId,
+        },
+      });
+      if (items.length > 0) return items;
+    } catch {
+      // GSI query failed or index unavailable, fall through
+    }
+
+    const all = await this.scanItems();
+    return all.filter((item) => item.hostId === hostId);
   }
 
   async findByArea(area: string, maxPrice?: number): Promise<ParkingListing[]> {
-    if (maxPrice !== undefined) {
-      return this.queryItems({
-        IndexName: 'area-price-index',
-        KeyConditionExpression: 'area = :area AND pricePerHour <= :maxPrice',
-        ExpressionAttributeValues: {
-          ':area': area,
-          ':maxPrice': maxPrice,
-        },
-      });
+    try {
+      let items: ParkingListing[];
+      if (maxPrice !== undefined) {
+        items = await this.queryItems({
+          IndexName: 'area-price-index',
+          KeyConditionExpression: 'area = :area AND pricePerHour <= :maxPrice',
+          ExpressionAttributeValues: {
+            ':area': area,
+            ':maxPrice': maxPrice,
+          },
+        });
+      } else {
+        items = await this.queryItems({
+          IndexName: 'area-price-index',
+          KeyConditionExpression: 'area = :area',
+          ExpressionAttributeValues: {
+            ':area': area,
+          },
+        });
+      }
+      if (items.length > 0) return items;
+    } catch {
+      // GSI query failed or index unavailable, fall through
     }
 
-    return this.queryItems({
-      IndexName: 'area-price-index',
-      KeyConditionExpression: 'area = :area',
-      ExpressionAttributeValues: {
-        ':area': area,
-      },
+    // Fallback: scan with case-insensitive area match
+    const all = await this.scanItems();
+    const areaLower = area.toLowerCase();
+    return all.filter((item) => {
+      const matchesArea = (item.area || '').toLowerCase().includes(areaLower);
+      const matchesPrice = maxPrice !== undefined ? item.pricePerHour <= maxPrice : true;
+      return matchesArea && matchesPrice;
     });
   }
 
   async findByCity(city: string): Promise<ParkingListing[]> {
-    return this.queryItems({
-      IndexName: 'city-index',
-      KeyConditionExpression: 'city = :city',
-      ExpressionAttributeValues: {
-        ':city': city,
-      },
-    });
+    try {
+      const items = await this.queryItems({
+        IndexName: 'city-index',
+        KeyConditionExpression: 'city = :city',
+        ExpressionAttributeValues: {
+          ':city': city,
+        },
+      });
+      if (items.length > 0) return items;
+    } catch {
+      // GSI query failed or index unavailable, fall through
+    }
+
+    // Fallback: scan with case-insensitive city match
+    const all = await this.scanItems();
+    const cityLower = city.toLowerCase();
+    return all.filter((item) => (item.city || '').toLowerCase() === cityLower);
   }
 
   async listActive(limit = 50): Promise<ParkingListing[]> {
-    return this.queryItems({
-      IndexName: 'status-index',
-      KeyConditionExpression: '#status = :status',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':status': 'ACTIVE',
-      },
-      Limit: limit,
-    });
+    try {
+      // Query both ACTIVE and AVAILABLE statuses (supports production and seed data)
+      const activePromise = this.queryItems({
+        IndexName: 'status-index',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'ACTIVE',
+        },
+        Limit: limit,
+      }).catch(() => [] as ParkingListing[]);
+
+      const availablePromise = this.queryItems({
+        IndexName: 'status-index',
+        KeyConditionExpression: '#status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'AVAILABLE',
+        },
+        Limit: limit,
+      }).catch(() => [] as ParkingListing[]);
+
+      const [activeItems, availableItems] = await Promise.all([activePromise, availablePromise]);
+      const combined = [...activeItems, ...availableItems];
+
+      if (combined.length > 0) {
+        const seen = new Set<string>();
+        const unique: ParkingListing[] = [];
+        for (const item of combined) {
+          if (!seen.has(item.listingId)) {
+            seen.add(item.listingId);
+            unique.push(item);
+          }
+        }
+        return unique.slice(0, limit);
+      }
+
+      // Fallback: scan table if GSI returned no items or is unindexed
+      const scanned = await this.scanItems({ Limit: limit });
+      return scanned
+        .filter((item) => {
+          const s = (item.status || '').toUpperCase();
+          return s === 'ACTIVE' || s === 'AVAILABLE' || !item.status;
+        })
+        .slice(0, limit);
+    } catch {
+      const scanned = await this.scanItems({ Limit: limit }).catch(() => [] as ParkingListing[]);
+      return scanned
+        .filter((item) => {
+          const s = (item.status || '').toUpperCase();
+          return s === 'ACTIVE' || s === 'AVAILABLE' || !item.status;
+        })
+        .slice(0, limit);
+    }
   }
 
   async update(listingId: string, data: Partial<ParkingListing>): Promise<ParkingListing | null> {

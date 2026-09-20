@@ -62,7 +62,7 @@ export class AdminService {
     const totalHosts = users.filter((u) => u.role === 'HOST').length;
 
     const totalListings = listings.length;
-    const activeListings = listings.filter((l) => l.status === 'ACTIVE').length;
+    const activeListings = listings.filter((l) => l.status === 'ACTIVE' || l.status === 'AVAILABLE').length;
 
     const totalBookings = bookings.length;
     const completedBookings = bookings.filter((b) => b.bookingStatus === 'COMPLETED').length;
@@ -208,13 +208,13 @@ export class AdminService {
     let listings: ParkingListing[] = [];
     if (area) {
       listings = await parkingRepository.findByArea(area);
-    } else if (status === 'ACTIVE') {
+    } else if (status === 'ACTIVE' || status === 'AVAILABLE') {
       listings = await parkingRepository.listActive(limit);
     } else {
       listings = await parkingRepository.listAll(limit * 2);
     }
 
-    if (status && !area && status !== 'ACTIVE') {
+    if (status && !area && status !== 'ACTIVE' && status !== 'AVAILABLE') {
       listings = listings.filter((l) => l.status === status);
     } else if (status && area) {
       listings = listings.filter((l) => l.status === status);

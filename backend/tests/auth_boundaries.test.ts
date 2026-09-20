@@ -579,4 +579,24 @@ describe('Auth — Notification ownership (user sees only own notifications)', (
       .set(asDriver(DRIVER_A));
     expect(res.status).toBe(200);
   });
+
+  it('authenticates successfully with Cognito JWT Bearer token', async () => {
+    const { notificationRepository } = require('../src/repositories/notificationRepository');
+    (notificationRepository.findByUserId as jest.Mock).mockResolvedValue([]);
+
+    const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+    const payload = Buffer.from(
+      JSON.stringify({
+        sub: DRIVER_A,
+        email: `${DRIVER_A}@example.com`,
+        'custom:role': 'DRIVER',
+      })
+    ).toString('base64url');
+    const token = `${header}.${payload}.mockSignature`;
+
+    const res = await request(app)
+      .get('/notifications')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+  });
 });

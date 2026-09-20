@@ -75,5 +75,5 @@ export const updateParkingListingSchema = z.object({
 });
 
 export const updateStatusSchema = z.object({
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'AVAILABLE']),
 });
