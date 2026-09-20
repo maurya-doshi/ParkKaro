@@ -186,4 +186,77 @@ describe('Parking Search APIs (GET /parking)', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('should include listings with status AVAILABLE (production data compatibility)', async () => {
+    const productionListing: any = {
+      listingId: 'list_11424333',
+      hostId: 'host_demo_1',
+      title: 'Prime Downtown Bandra Spot',
+      description: 'Covered, secure parking in downtown Bandra.',
+      address: '101 Hill Road',
+      area: 'Bandra',
+      city: 'Mumbai',
+      latitude: 19.0596,
+      longitude: 72.8295,
+      pricePerHour: 60,
+      totalSlots: 3,
+      availableSlots: 3,
+      status: 'AVAILABLE',
+      amenities: {}, // production non-array object
+      vehicleTypes: {}, // production non-array object
+      createdAt: '2026-09-20T10:30:00.000Z',
+      updatedAt: '2026-09-20T10:30:00.000Z',
+    };
+
+    (parkingRepository.listActive as jest.Mock).mockResolvedValueOnce([productionListing]);
+
+    const res = await request(app).get('/parking');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.items.length).toBe(1);
+    expect(res.body.data.items[0].listingId).toBe('list_11424333');
+    expect(res.body.data.items[0].title).toBe('Prime Downtown Bandra Spot');
+    expect(res.body.data.items[0].city).toBe('Mumbai');
+    expect(res.body.data.items[0].area).toBe('Bandra');
+    expect(res.body.data.items[0].pricePerHour).toBe(60);
+    // Verified defensive normalization
+    expect(Array.isArray(res.body.data.items[0].amenities)).toBe(true);
+    expect(Array.isArray(res.body.data.items[0].photos)).toBe(true);
+    expect(res.body.data.items[0].rating).toBe(0);
+    expect(res.body.data.items[0].reviewCount).toBe(0);
+    expect(res.body.data.items[0].parkingType).toBe('COVERED');
+  });
+
+  it('should find production AVAILABLE listing when searching by city or area', async () => {
+    const productionListing: any = {
+      listingId: 'list_11424333',
+      hostId: 'host_demo_1',
+      title: 'Prime Downtown Bandra Spot',
+      description: 'Covered, secure parking in downtown Bandra.',
+      address: '101 Hill Road',
+      area: 'Bandra',
+      city: 'Mumbai',
+      latitude: 19.0596,
+      longitude: 72.8295,
+      pricePerHour: 60,
+      status: 'AVAILABLE',
+      amenities: {},
+      vehicleTypes: {},
+      createdAt: '2026-09-20T10:30:00.000Z',
+      updatedAt: '2026-09-20T10:30:00.000Z',
+    };
+
+    (parkingRepository.findByCity as jest.Mock).mockResolvedValueOnce([productionListing]);
+    const resCity = await request(app).get('/parking?city=Mumbai');
+    expect(resCity.status).toBe(200);
+    expect(resCity.body.data.items.length).toBe(1);
+    expect(resCity.body.data.items[0].listingId).toBe('list_11424333');
+
+    (parkingRepository.findByArea as jest.Mock).mockResolvedValueOnce([productionListing]);
+    const resArea = await request(app).get('/parking?area=Bandra');
+    expect(resArea.status).toBe(200);
+    expect(resArea.body.data.items.length).toBe(1);
+    expect(resArea.body.data.items[0].listingId).toBe('list_11424333');
+  });
 });
+

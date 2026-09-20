@@ -82,7 +82,7 @@ export class DashboardService {
 
     const now = new Date().toISOString();
 
-    const activeListings = listings.filter((l) => l.status === 'ACTIVE');
+    const activeListings = listings.filter((l) => l.status === 'ACTIVE' || l.status === 'AVAILABLE');
     const upcomingBookings = bookings.filter(
       (b) => b.bookingStatus === 'CONFIRMED' && b.startTime >= now
     );
