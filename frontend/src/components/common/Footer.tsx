@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
                 P
               </div>
               <span className="text-xl font-extrabold text-white tracking-tight">
-                Park<span className="text-blue-500">Share</span>
+                Park<span className="text-blue-500">Karo</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">

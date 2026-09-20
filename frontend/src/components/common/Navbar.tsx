@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAI }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-extrabold tracking-tight text-slate-950 flex items-center gap-1">
-                Park<span className="text-blue-600">Share</span>
+                Park<span className="text-blue-600">Karo</span>
               </span>
               <span className="text-[10px] font-semibold text-slate-400 -mt-1 tracking-wider uppercase">
                 Bengaluru Marketplace

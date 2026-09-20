@@ -9,7 +9,7 @@
 ## 🚀 Live Demo
 
 Try the live application here:
-👉 **[ParkKaro Production Demo](http://parkkaro-frontend-production-742986823789.s3-website.ap-south-1.amazonaws.com/)**
+👉 **[ParkKaro Production Demo](http://parkshare-frontend-production-742986823789.s3-website.ap-south-1.amazonaws.com/)**
 
 ---
 
