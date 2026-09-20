@@ -24,6 +24,17 @@ param(
     [switch]$SkipBuild = $false
 )
 
+# Ensure Node.js, AWS CLI, and SAM CLI are in PATH for this session
+if (Test-Path "C:\Program Files\nodejs") {
+    $env:PATH = "C:\Program Files\nodejs;$env:PATH"
+}
+if (Test-Path "C:\Program Files\Amazon\AWSCLIV2") {
+    $env:PATH = "C:\Program Files\Amazon\AWSCLIV2;$env:PATH"
+}
+if (Test-Path "C:\Program Files\Amazon\AWSSAMCLI\bin") {
+    $env:PATH = "C:\Program Files\Amazon\AWSSAMCLI\bin;$env:PATH"
+}
+
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = (Resolve-Path "$PSScriptRoot\..\..").Path
@@ -58,18 +69,21 @@ if (-not $SkipBuild) {
     Push-Location $BackendDir
     
     # Install dependencies
+    $oldEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     if (Test-Path "package-lock.json") {
-        npm ci --prefer-offline 2>$null
-        if ($LASTEXITCODE -ne 0) { npm install }
+        npm ci --prefer-offline 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { npm install 2>&1 | Out-Null }
     } else {
-        npm install
+        npm install 2>&1 | Out-Null
     }
     
     # Build TypeScript
     npm run build
     
     # Install serverless-http for Lambda (without touching backend package.json)
-    npm install --no-save serverless-http 2>$null
+    npm install --no-save serverless-http 2>&1 | Out-Null
+    $ErrorActionPreference = $oldEAP
     
     # Place Lambda handler into backend dist/ without touching backend/src/
     if (Test-Path "$InfraDir\lambda\lambda.js") {

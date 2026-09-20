@@ -12,6 +12,7 @@
  * Do NOT add business logic here — that belongs in app.ts and handlers.
  */
 import serverless from 'serverless-http';
-import { app } from './app';
+// Backend builds into dist/src/app.js when tsc compiles
+import { app } from './src/app';
 
 export const handler = serverless(app);

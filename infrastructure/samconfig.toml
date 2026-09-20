@@ -1,12 +1,9 @@
-# ═══════════════════════════════════════════════════════════════
-# ParkShare — SAM CLI Configuration
-# ═══════════════════════════════════════════════════════════════
+# ParkShare - SAM CLI Configuration
 # DO NOT commit real AWS credentials or account-specific values.
 #
 # IMPORTANT: If DynamoDB tables already exist in your AWS account,
 # use --parameter-overrides CreateDynamoDBTables=false to prevent
 # CloudFormation from trying to manage pre-existing tables.
-# ═══════════════════════════════════════════════════════════════
 
 version = 0.1
 
@@ -26,7 +23,7 @@ parallel = true
 [default.local_start_api.parameters]
 port = 3001
 
-# ─── Staging ──────────────────────────────────────────────────
+# Staging
 [staging.deploy.parameters]
 stack_name = "parkshare-staging"
 region = "ap-south-1"
@@ -37,24 +34,24 @@ resolve_s3 = true
 fail_on_empty_changeset = false
 parameter_overrides = "Environment=staging"
 
-# ─── Production ──────────────────────────────────────────────
+# Production
 # SAFE MODE: CreateDynamoDBTables=false to preserve existing tables
 [production.deploy.parameters]
 stack_name = "parkshare-production"
 region = "ap-south-1"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 s3_prefix = "parkshare-prod"
 resolve_s3 = true
 fail_on_empty_changeset = false
 parameter_overrides = "Environment=production CreateDynamoDBTables=false"
 
-# ─── Production (with table creation) ────────────────────────
-# Use this ONLY on first deployment when tables don't exist yet
+# Production (with table creation)
+# Use this ONLY on first deployment when tables do not exist yet
 [production-fresh.deploy.parameters]
 stack_name = "parkshare-production"
 region = "ap-south-1"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 s3_prefix = "parkshare-prod"
 resolve_s3 = true
