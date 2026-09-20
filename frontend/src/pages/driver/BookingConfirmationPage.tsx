@@ -67,7 +67,7 @@ export const BookingConfirmationPage: React.FC = () => {
       onClick={() => {
         const start = new Date(booking.startTime);
         const end = new Date(booking.endTime);
-        const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const formatDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${formatDate(start)}\nDTEND:${formatDate(end)}\nSUMMARY:Parking Reservation at ${booking.listingTitle}\nDESCRIPTION:Location - ${booking.listingAddress}\nEND:VEVENT\nEND:VCALENDAR`;
         const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
         const url = URL.createObjectURL(blob);
