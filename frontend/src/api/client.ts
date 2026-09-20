@@ -38,8 +38,8 @@ export class ApiClient {
     };
 
     // Check auth in localStorage
-    const savedUser = localStorage.getItem('parkshare_auth_user');
-    const token = localStorage.getItem('parkshare_auth_token');
+    const savedUser = localStorage.getItem('parkkaro_auth_user');
+    const token = localStorage.getItem('parkkaro_auth_token');
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
