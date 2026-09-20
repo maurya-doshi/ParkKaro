@@ -4,6 +4,7 @@ import { messagesApi } from '../../api/messages';
 import { Conversation, ChatMessage } from '../../types/message';
 import { Send, MessageSquare, User, CheckCheck, Clock } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const MessagesPage: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -45,11 +46,18 @@ export const MessagesPage: React.FC = () => {
 
   const activeConv = conversations.find((c) => c.conversationId === activeConvId);
 
+  const { user } = useAuth();
+  const isHost = user?.role === 'HOST';
+
   return (
     <DashboardLayout
-      type="driver"
-      title="Host & Driver Chat"
-      subtitle="Direct communication with parking hosts for gate directions, access instructions, or special requests."
+      type={isHost ? 'host' : 'driver'}
+      title={isHost ? 'Guest Messages' : 'Host & Driver Chat'}
+      subtitle={
+        isHost
+          ? 'Manage communication with guests regarding check-ins, extensions, or issues.'
+          : 'Direct communication with parking hosts for gate directions, access instructions, or special requests.'
+      }
     >
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden h-[580px] flex flex-col md:flex-row">
         {/* Conversation Threads Sidebar */}
@@ -107,7 +115,7 @@ export const MessagesPage: React.FC = () => {
               <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">
-                    {activeConv.participantNames?.['user_host1'] || 'Priya Sharma (Host)'}
+                    {activeConv.participantNames?.[activeConv.withUserId] || (isHost ? 'Guest' : 'Host')}
                   </h4>
                   <p className="text-[11px] text-slate-500">{activeConv.listingTitle}</p>
                 </div>
@@ -119,7 +127,7 @@ export const MessagesPage: React.FC = () => {
               {/* Message List */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((m) => {
-                  const isMe = m.senderId === 'user_driver1';
+                  const isMe = m.senderId === user?.userId;
 
                   return (
                     <div
