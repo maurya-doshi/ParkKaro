@@ -268,7 +268,7 @@ export const DriverDashboardPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-slate-100 text-xs">
-              {(stats.pastBookings || stats.recentBookings || []).map((b) => (
+              {(stats.pastBookings || stats.recentBookings || []).map((b: any) => (
                 <div key={b.bookingId} className="py-3.5 first:pt-0 flex items-center justify-between">
                   <div>
                     <h4 className="font-bold text-slate-900">{b.listingTitle || 'Parking Spot'}</h4>

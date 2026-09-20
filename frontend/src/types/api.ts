@@ -85,6 +85,9 @@ export interface DriverDashboardStats {
     bookingStatus: string;
     qrVerificationCode?: string;
     qrData?: string;
+    listingTitle?: string;
+    listingAddress?: string;
+    amount?: number;
   }>;
   activeBooking: {
     bookingId: string;
@@ -99,6 +102,9 @@ export interface DriverDashboardStats {
     qrData?: string;
     latitude?: number;
     longitude?: number;
+    listingTitle?: string;
+    listingAddress?: string;
+    amount?: number;
   } | null;
   completedBookings: number;
   cancelledBookings: number;
@@ -106,6 +112,7 @@ export interface DriverDashboardStats {
   favoriteCount: number;
   vehicleCount: number;
   unreadNotifications: number;
+  pastBookings?: Array<any>;
   recentBookings?: Array<any>;
   recentNotifications?: Array<any>;
 }

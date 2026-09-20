@@ -115,7 +115,7 @@ export const MessagesPage: React.FC = () => {
               <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">
-                    {activeConv.participantNames?.[activeConv.withUserId] || (isHost ? 'Guest' : 'Host')}
+                    {activeConv.participantNames?.[activeConv.participants.find(p => p !== user?.userId) || ''] || (isHost ? 'Guest' : 'Host')}
                   </h4>
                   <p className="text-[11px] text-slate-500">{activeConv.listingTitle}</p>
                 </div>

@@ -42,8 +42,8 @@ export const HostEarningsPage: React.FC = () => {
           payoutId: `payout_${Date.now().toString(36)}`,
           amount: 14220,
           status: 'PROCESSING',
-          periodStart: '2026-09-01',
-          periodEnd: '2026-09-18',
+          period: '2026-09',
+          currency: 'INR',
           createdAt: new Date().toISOString()
         },
         ...prev
