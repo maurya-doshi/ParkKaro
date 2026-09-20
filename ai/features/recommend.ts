@@ -1,104 +1,121 @@
 /**
- * ParkShare AI — Feature: Parking Recommendations
+ * ParkShare AI — Feature: Parking Recommendations (Hardened)
  *
  * POST /ai/recommend
  *
- * Flow:
- * 1. Backend fetches candidate listings from DynamoDB (real data)
- * 2. This module calls Bedrock to rank and explain the candidates
- * 3. Grounding validator removes any hallucinated listing IDs
- * 4. Backend returns real listing data with AI explanations
- *
- * Grounding guarantee:
- * - AI only receives real listings from the backend
- * - AI only recommends listingIds from the provided set
- * - Grounding validator discards any invented IDs
- * - Real listing data is always sourced from the backend, never from AI output
+ * Hardening additions vs original:
+ * - Zod schema validates Bedrock output shape
+ * - Model error detection
+ * - Graceful fallback on every failure path (no 503 errors)
+ * - Recommendation cap enforced at schema level
+ * - Real listing data always sourced from the backend — never from AI output
  */
 
 import { invokeModel, isAIError, parseJSON, primaryModel } from '../bedrock/client';
 import {
   RECOMMEND_SYSTEM_PROMPT,
   buildRecommendUserPrompt,
-} from '../bedrock/prompts';
-import { groundRecommendations } from '../grounding/validator';
-import { TOKEN_LIMITS, MODEL_PARAMS } from '../bedrock/models';
+}                                                     from '../bedrock/prompts';
+import { groundRecommendations }                      from '../grounding/validator';
+import {
+  RecommendationOutputSchema,
+  RecommendationOutput,
+  ModelErrorSchema,
+  validateOutput,
+}                                                     from '../grounding/schemas';
+import { TOKEN_LIMITS, MODEL_PARAMS }                 from '../bedrock/models';
 import type {
   RecommendRequest,
   RecommendResult,
   RecommendedListing,
   BackendListing,
   AIError,
-} from '../types';
+}                                                     from '../types';
+
+// ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
- * Generate AI-powered parking recommendations.
+ * Generate grounded parking recommendations.
  *
- * @param request - Contains userId, context, candidate listings, and user preferences
- * @returns RecommendResult with grounded recommendations, or AIError on failure
+ * ALWAYS returns a RecommendResult — never throws.
+ * If AI fails, a non-AI fallback is returned automatically.
  */
 export async function generateRecommendations(
   request: RecommendRequest
-): Promise<RecommendResult | AIError> {
+): Promise<RecommendResult> {
   const { candidates = [], context, userPreferences } = request;
 
+  // Short-circuit: nothing to recommend
   if (candidates.length === 0) {
-    // No candidates — nothing for AI to recommend
     return {
       recommendations: [],
-      totalCandidates:  0,
+      totalCandidates: 0,
       aiNote:          'No candidate listings were available to recommend from.',
     };
   }
 
   const result = await invokeModel({
-    modelId:     primaryModel,
+    modelId:      primaryModel,
     systemPrompt: RECOMMEND_SYSTEM_PROMPT,
     userMessage:  buildRecommendUserPrompt(
       candidates,
       context,
-      userPreferences as Record<string, unknown> | undefined
+      userPreferences as Record<string, unknown> | undefined,
     ),
     maxTokens:    TOKEN_LIMITS.RECOMMEND,
     ...MODEL_PARAMS.NATURAL,
   });
 
   if (isAIError(result)) {
-    // Return fallback: recommend top-rated listings without AI explanation
-    return fallbackRecommendations(candidates, request);
+    console.warn('[AI/recommend] Bedrock error, using fallback:', result.code);
+    return fallbackRecommendations(candidates, 'AI recommendations unavailable — showing top-rated options.');
   }
 
-  const parsed = parseJSON<{ recommendations?: Partial<RecommendedListing>[]; aiNote?: string }>(
-    result.content
+  // Stage 1: parse JSON
+  const parsed = parseJSON<unknown>(result.content);
+  if (!parsed) {
+    return fallbackRecommendations(candidates, 'AI returned malformed output — showing top-rated options.');
+  }
+
+  // Stage 2: detect model error
+  const modelErr = ModelErrorSchema.safeParse(parsed);
+  if (modelErr.success) {
+    return fallbackRecommendations(candidates, `AI note: ${modelErr.data.reason ?? 'insufficient data'}`);
+  }
+
+  // Stage 3: validate shape — cast to ZodType<unknown> to avoid input/output variance issues
+  const [validated, schemaErr] = validateOutput<RecommendationOutput>(
+    RecommendationOutputSchema as unknown as import('zod').ZodType<RecommendationOutput>,
+    parsed
   );
-
-  if (!parsed || !Array.isArray(parsed.recommendations)) {
-    return fallbackRecommendations(candidates, request);
+  if (!validated) {
+    console.warn('[AI/recommend] Schema validation failed:', schemaErr);
+    return fallbackRecommendations(candidates, 'AI output did not match expected format — showing top-rated options.');
   }
 
-  // Ground: remove any hallucinated listing IDs, validate scores
-  const grounded = groundRecommendations(parsed.recommendations, candidates);
+  // Stage 4: grounding — remove any hallucinated listing IDs
+  const grounded = groundRecommendations(validated.recommendations, candidates);
 
   if (grounded.length === 0) {
-    // Grounding removed everything — fall back to non-AI recommendations
-    return fallbackRecommendations(candidates, request);
+    return fallbackRecommendations(candidates, 'AI recommendations could not be grounded — showing top-rated options.');
   }
 
   return {
     recommendations: grounded,
-    totalCandidates:  candidates.length,
-    aiNote:           parsed.aiNote ?? undefined,
+    totalCandidates: candidates.length,
+    aiNote:          validated.aiNote ?? undefined,
   };
 }
 
+// ─── Fallback ─────────────────────────────────────────────────────────────────
+
 /**
- * Fallback recommendations when Bedrock is unavailable or returns invalid data.
- * Returns top listings sorted by rating (descending), with no AI explanation.
- * This ensures the marketplace always functions even when AI is down.
+ * Non-AI fallback: top listings by DynamoDB rating.
+ * The marketplace always works even when Bedrock is down.
  */
 function fallbackRecommendations(
   candidates: BackendListing[],
-  request: RecommendRequest
+  note: string,
 ): RecommendResult {
   const topListings = [...candidates]
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
@@ -107,14 +124,16 @@ function fallbackRecommendations(
   const recommendations: RecommendedListing[] = topListings.map(listing => ({
     listingId:          listing.listingId,
     listing,
-    explanation:        'Highly rated parking spot in your area.',
+    explanation:        listing.rating
+                          ? `Rated ${listing.rating}/5 by ${listing.reviewCount ?? 0} reviewers in ${listing.area}.`
+                          : `Available parking in ${listing.area} at ₹${listing.pricePerHour}/hour.`,
     relevanceScore:     listing.rating ? listing.rating / 5 : 0.5,
     matchedPreferences: [],
   }));
 
   return {
     recommendations,
-    totalCandidates:  candidates.length,
-    aiNote:           'AI recommendations unavailable — showing top-rated options.',
+    totalCandidates: candidates.length,
+    aiNote:          note,
   };
 }

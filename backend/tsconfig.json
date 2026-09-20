@@ -17,7 +17,8 @@
     "rootDirs": [".", "../ai"],
     "paths": {
       "@/*": ["src/*"],
-      "@aws-sdk/client-bedrock-runtime": ["./node_modules/@aws-sdk/client-bedrock-runtime"]
+      "@aws-sdk/client-bedrock-runtime": ["./node_modules/@aws-sdk/client-bedrock-runtime"],
+      "zod": ["./node_modules/zod"]
     }
   },
   "include": ["src/**/*", "scripts/**/*", "tests/**/*", "../ai/**/*"],

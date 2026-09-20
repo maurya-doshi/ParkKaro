@@ -1,45 +1,46 @@
 /**
- * ParkShare AI — Feature: Host Pricing Assistant
+ * ParkShare AI — Feature: Host Pricing Assistant (Hardened)
  *
  * POST /ai/pricing
  *
- * Flow:
- * 1. Backend fetches comparable listings and area average price from DynamoDB
- * 2. This module calls Bedrock with real market context
- * 3. Bedrock returns a pricing ESTIMATE (never authoritative)
- * 4. Grounding validator clamps prices to sensible ranges
- * 5. Response always includes a disclaimer that this is an estimate
- *
- * Grounding guarantee:
- * - Pricing suggestions are based ONLY on real backend market data provided
- * - All suggestions are clearly labeled "ESTIMATE"
- * - Suggestions are capped at 3x area average to prevent absurd outputs
- * - Backend pricing authority (Person 2 / DynamoDB) is never overridden
+ * Hardening additions vs original:
+ * - Zod schema validates Bedrock output shape
+ * - Model error detection
+ * - ALWAYS returns a PricingEstimate (never throws / never 503)
+ * - Suggests are always labeled ESTIMATE and capped at 3× area average
+ * - Fallback arithmetic calculation when Bedrock is unavailable
  */
 
 import { invokeModel, isAIError, parseJSON, primaryModel } from '../bedrock/client';
 import {
   PRICING_SYSTEM_PROMPT,
   buildPricingUserPrompt,
-} from '../bedrock/prompts';
-import { groundPricingSuggestion } from '../grounding/validator';
-import { TOKEN_LIMITS, MODEL_PARAMS } from '../bedrock/models';
+}                                                     from '../bedrock/prompts';
+import { groundPricingSuggestion }                    from '../grounding/validator';
+import {
+  PricingOutputSchema,
+  ModelErrorSchema,
+  validateOutput,
+}                                                     from '../grounding/schemas';
+import { TOKEN_LIMITS, MODEL_PARAMS }                 from '../bedrock/models';
 import type {
   PricingRequest,
   PricingEstimate,
   BackendListing,
-  AIError,
-} from '../types';
+}                                                     from '../types';
+
+// ─── Main entry point ─────────────────────────────────────────────────────────
 
 /**
  * Generate an AI pricing estimate for a host's listing.
  *
- * Returns a PricingEstimate or an AIError.
- * The estimate is ALWAYS labeled as such — never authoritative.
+ * ALWAYS returns a PricingEstimate — never throws.
+ * If Bedrock fails, a fallback arithmetic estimate is returned.
+ * The estimate is ALWAYS labeled "ESTIMATE" — it is never authoritative.
  */
 export async function generatePricingEstimate(
   request: PricingRequest
-): Promise<PricingEstimate | AIError> {
+): Promise<PricingEstimate> {
   const {
     location       = 'Unknown area',
     parkingType    = 'OPEN',
@@ -49,17 +50,14 @@ export async function generatePricingEstimate(
     bookingDemand,
   } = request;
 
-  // If we have no market context, return a graceful error
+  // If we have zero market context, return a safe arithmetic fallback immediately
   if (!areaAveragePrice && comparables.length === 0) {
-    return {
-      code:                'GROUNDING_FAILED',
-      message:             'Insufficient market data to generate a pricing estimate.',
-      fallbackRecommended: false,
-    };
+    console.warn('[AI/pricing] No market context — returning neutral fallback estimate');
+    return neutralFallback(currentHourlyRate);
   }
 
   const result = await invokeModel({
-    modelId:     primaryModel,
+    modelId:      primaryModel,
     systemPrompt: PRICING_SYSTEM_PROMPT,
     userMessage:  buildPricingUserPrompt(
       location,
@@ -74,57 +72,113 @@ export async function generatePricingEstimate(
   });
 
   if (isAIError(result)) {
-    // Return a simple estimate based on area average if AI fails
-    return fallbackPricingEstimate(areaAveragePrice, comparables);
+    console.warn('[AI/pricing] Bedrock error, using fallback:', result.code);
+    return fallbackPricingEstimate(areaAveragePrice, comparables, currentHourlyRate);
   }
 
-  const parsed = parseJSON<Partial<PricingEstimate>>(result.content);
-
+  // Stage 1: parse JSON
+  const parsed = parseJSON<unknown>(result.content);
   if (!parsed) {
-    return fallbackPricingEstimate(areaAveragePrice, comparables);
+    return fallbackPricingEstimate(areaAveragePrice, comparables, currentHourlyRate);
   }
 
-  // Ground: validate and clamp the estimate
-  return groundPricingSuggestion(parsed, areaAveragePrice);
+  // Stage 2: detect model error
+  if (ModelErrorSchema.safeParse(parsed).success) {
+    return fallbackPricingEstimate(areaAveragePrice, comparables, currentHourlyRate);
+  }
+
+  // Stage 3: validate shape
+  const [validated, schemaErr] = validateOutput(PricingOutputSchema, parsed);
+  if (!validated) {
+    console.warn('[AI/pricing] Schema validation failed:', schemaErr);
+    return fallbackPricingEstimate(areaAveragePrice, comparables, currentHourlyRate);
+  }
+
+  // Stage 4: grounding — clamp rates, overwrite disclaimer
+  // Cast: Zod nullable vs optional difference is safe at runtime
+  const grounded = groundPricingSuggestion(validated as unknown as Partial<import('../types').PricingEstimate>, areaAveragePrice);
+  if ('code' in grounded) {
+    // grounding returned an AIError — use fallback
+    return fallbackPricingEstimate(areaAveragePrice, comparables, currentHourlyRate);
+  }
+
+  return grounded;
 }
 
+// ─── Fallbacks ────────────────────────────────────────────────────────────────
+
+const CANONICAL_DISCLAIMER =
+  'This is an AI-generated estimate for informational purposes only. ' +
+  'ParkShare does not guarantee market prices. ' +
+  'Always verify against current market conditions before setting your listing price.';
+
 /**
- * Fallback pricing estimate when Bedrock is unavailable.
- * Calculates a simple estimate from area average and comparable data.
+ * Fallback: compute estimate from area average and comparables.
+ * Used when Bedrock is unavailable or returns invalid data.
  */
 function fallbackPricingEstimate(
   areaAveragePrice?: number,
-  comparables: BackendListing[] = []
+  comparables: BackendListing[] = [],
+  currentHourlyRate?: number,
 ): PricingEstimate {
-  // Compute average from comparables if area average not available
-  let avgPrice = areaAveragePrice;
-  if (!avgPrice && comparables.length > 0) {
-    avgPrice = comparables.reduce((sum, c) => sum + c.pricePerHour, 0) / comparables.length;
+  let base = areaAveragePrice;
+
+  if (!base && comparables.length > 0) {
+    base = comparables.reduce((sum, c) => sum + c.pricePerHour, 0) / comparables.length;
+    base = Math.round(base);
   }
 
-  const base   = avgPrice ?? 40; // Default to ₹40/hr if no data
-  const minRate = Math.round(base * 0.8);
+  if (!base) {
+    return neutralFallback(currentHourlyRate);
+  }
+
+  const minRate = Math.max(5, Math.round(base * 0.8));
   const maxRate = Math.round(base * 1.2);
 
+  const changeFromCurrent = currentHourlyRate != null
+    ? Math.round(((base - currentHourlyRate) / currentHourlyRate) * 100 * 10) / 10
+    : null;
+
   return {
-    suggestionType: 'ESTIMATE',
-    suggestedHourlyRate: {
-      min:         minRate,
-      max:         maxRate,
-      recommended: Math.round(base),
-    },
-    suggestedDailyRate: {
+    suggestionType:      'ESTIMATE',
+    suggestedHourlyRate: { min: minRate, max: maxRate, recommended: Math.round(base) },
+    suggestedDailyRate:  {
       min:         minRate * 7,
       max:         maxRate * 7,
       recommended: Math.round(base * 7),
     },
     rationale:         'Estimate based on area average price from comparable listings.',
-    changeFromCurrent: undefined,
+    changeFromCurrent,
     marketContext: {
-      areaAverage:     avgPrice ?? null,
+      areaAverage:     base,
       comparableCount: comparables.length,
       demandLevel:     null,
     },
-    disclaimer: 'This is an AI-generated estimate for informational purposes only. ParkShare does not guarantee market prices. Always verify against current market conditions before setting your listing price.',
+    disclaimer: CANONICAL_DISCLAIMER,
+  };
+}
+
+/**
+ * Neutral fallback when no market context is available at all.
+ * Returns a ₹40/hour baseline (ParkShare market default).
+ */
+function neutralFallback(currentHourlyRate?: number): PricingEstimate {
+  const base = currentHourlyRate ?? 40;
+  return {
+    suggestionType:      'ESTIMATE',
+    suggestedHourlyRate: {
+      min:         Math.max(5, Math.round(base * 0.85)),
+      max:         Math.round(base * 1.15),
+      recommended: Math.round(base),
+    },
+    suggestedDailyRate: undefined,
+    rationale:          'Insufficient market data to generate a specific estimate. Showing a neutral estimate based on your current rate.',
+    changeFromCurrent:  null,
+    marketContext: {
+      areaAverage:     null,
+      comparableCount: 0,
+      demandLevel:     null,
+    },
+    disclaimer: CANONICAL_DISCLAIMER,
   };
 }
